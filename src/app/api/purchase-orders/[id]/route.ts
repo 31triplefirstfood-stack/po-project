@@ -234,6 +234,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
             });
 
             return po;
+        }, {
+            maxWait: 5000,
+            timeout: 15000,
         });
 
         return NextResponse.json(updatedPo);

@@ -191,6 +191,9 @@ export async function POST(request: NextRequest) {
                     },
                 },
             });
+        }, {
+            maxWait: 5000, // default is 2000
+            timeout: 15000, // default is 5000
         });
 
         return NextResponse.json(purchaseOrder, { status: 201 });
