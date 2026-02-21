@@ -119,7 +119,7 @@ export default function PurchaseOrderDetailPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-6xl mx-auto pb-10 h-[calc(100vh-100px)] flex flex-col">
+        <div className="space-y-4 w-full p-4 md:p-6 h-[100dvh] flex flex-col">
             <div className="flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <Link href="/purchase-orders">
