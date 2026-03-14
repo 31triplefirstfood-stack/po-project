@@ -193,15 +193,12 @@ export default function PurchaseOrdersPage() {
                         <FileSpreadsheet className="w-5 h-5" />
                         <span className="font-bold text-center sm:text-left">รายการ PO ทั้งหมด (All PO List)</span>
                     </div>
-                    <Button size="sm" className="bg-[#10b981] hover:bg-[#059669] text-white border-none w-full sm:w-auto shadow-sm">
-                        <FileSpreadsheet className="mr-2 h-4 w-4" /> <span className="truncate">บันทึกข้อมูลลง Google Sheet</span>
-                    </Button>
                 </div>
 
                 {/* ── Filters ── */}
-                <div className="bg-white p-4 rounded-lg sm:rounded-b-lg shadow-sm border border-gray-100 sm:border-t-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
+                <div className="bg-white p-4 rounded-lg sm:rounded-b-lg shadow-sm border border-gray-100 sm:border-t-0 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-9 gap-3 sm:gap-4 items-end">
                     {/* Row 1: existing filters */}
-                    <div className="col-span-1 sm:col-span-2">
+                    {/* <div className="col-span-1 sm:col-span-2">
                         <label className="text-xs text-gray-500 mb-1 block">ค้นหาแบบ (Type)</label>
                         <Select value={searchType} onValueChange={setSearchType}>
                             <SelectTrigger className="bg-gray-50 border-gray-200">
@@ -211,12 +208,12 @@ export default function PurchaseOrdersPage() {
                                 <SelectItem value="all">ทั้งหมด</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div> */}
                     <div className="col-span-1 sm:col-span-2">
                         <label className="text-xs text-gray-500 mb-1 block">วันที่ (Date)</label>
                         <DatePickerInput date={filterDate} setDate={setFilterDate} />
                     </div>
-                    <div className="col-span-1 sm:col-span-3">
+                    <div className="col-span-1 sm:col-span-2">
                         <label className="text-xs text-gray-500 mb-1 block">เลข PO (Number)</label>
                         <Input placeholder="ค้นหาเลข PO..." value={filterPo} onChange={e => setFilterPo(e.target.value)} className="bg-gray-50 border-gray-200" />
                     </div>
@@ -231,7 +228,7 @@ export default function PurchaseOrdersPage() {
                     </div>
 
                     {/* Row 2: Month / Year filters */}
-                    <div className="col-span-1 sm:col-span-2 md:col-span-6">
+                    <div className="col-span-1 sm:col-span-2 md:col-span-2">
                         <label className="text-xs text-gray-500 mb-1 block">กรองตามเดือน (Month)</label>
                         <Select value={filterMonth} onValueChange={setFilterMonth}>
                             <SelectTrigger className="bg-gray-50 border-gray-200">
@@ -245,7 +242,7 @@ export default function PurchaseOrdersPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="col-span-1 sm:col-span-2 md:col-span-6">
+                    <div className="col-span-1 sm:col-span-2 md:col-span-3">
                         <label className="text-xs text-gray-500 mb-1 block">กรองตามปี (Year)</label>
                         <Select value={filterYear} onValueChange={setFilterYear}>
                             <SelectTrigger className="bg-gray-50 border-gray-200">
