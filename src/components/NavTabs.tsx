@@ -14,7 +14,7 @@ export default function NavTabs() {
         { name: 'PO ทั้งหมด', href: '/purchase-orders', icon: List },
         { name: 'ข้อมูลลูกค้า', href: '/customers', icon: Users },
         { name: 'จัดการสต็อก', href: '/stock', icon: Warehouse },
-        { name: 'หน้าการผลิต', href: '/production', icon: Factory },
+        // { name: 'หน้าการผลิต', href: '/production', icon: Factory },
     ];
 
     return (
