@@ -450,7 +450,7 @@ const POTemplate = ({ data }: { data: POData }) => {
                     <View style={styles.headerContainer}>
                         <Text style={styles.companyTitle}>บริษัท ตรีเอกอุตสาหกรรมอาหาร จำกัด (สำนักงานใหญ่)) </Text>
                         <Text style={styles.companyAddress}>19/12 ถ.หนองประทีป ต.หนองป่าครั่ง อ.เมือง จ.เชียงใหม่ 50000</Text>
-                        <Text style={styles.companyAddress}>เบอร์โทรศัพท์ 081-599-6698, 086-900-7225 สำนักงาน 053-245-750</Text>
+                        <Text style={styles.companyAddress}>เบอร์โทรศัพท์ 081-599-6698, 086-900-7225 สำนักงาน 053-245-750             </Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
                             <Text style={styles.companyAddress}>เลขที่ประจำตัวผู้เสียภาษีอากร : </Text>
                             <Text style={styles.taxID}> 0505566007959</Text>
