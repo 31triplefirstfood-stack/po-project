@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { FileText, List, Users } from 'lucide-react';
+import { FileText, List, Users, Warehouse, Factory } from 'lucide-react';
 
 export default function NavTabs() {
     const pathname = usePathname();
@@ -12,7 +12,9 @@ export default function NavTabs() {
     const tabs = [
         { name: 'สร้างออเดอร์', href: '/purchase-orders/create', icon: FileText },
         { name: 'PO ทั้งหมด', href: '/purchase-orders', icon: List },
+        { name: 'หน้าการผลิต', href: '/production', icon: Factory },
         { name: 'ข้อมูลลูกค้า', href: '/customers', icon: Users },
+        { name: 'จัดการสต็อก', href: '/stock', icon: Warehouse },
     ];
 
     return (

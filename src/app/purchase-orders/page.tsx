@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import NavTabs from "@/components/NavTabs";
-import { cn } from "@/lib/utils";
+import { cn, formatPoNumber } from "@/lib/utils";
 
 // Mock DatePicker if not exists, or I will use standard input type date for speed
 function DatePickerInput({ date, setDate }: { date: Date | undefined, setDate: (d: Date | undefined) => void }) {
@@ -44,6 +44,7 @@ interface PurchaseOrder {
     poNumber: string;
     status: string;
     issueDate: string;
+    paymentDate?: string | null;
     deliveryDate: string;
     grandTotal: number;
     shippingCost: number;
@@ -128,8 +129,12 @@ export default function PurchaseOrdersPage() {
             const res = await fetch("/api/purchase-orders");
             if (!res.ok) throw new Error("Failed to fetch POs");
             const data = await res.json();
-            setPos(data);
-            setFilteredPos(data);
+            const normalizedData = data.map((po: PurchaseOrder) => ({
+                ...po,
+                poNumber: formatPoNumber(po.poNumber),
+            }));
+            setPos(normalizedData);
+            setFilteredPos(normalizedData);
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -276,7 +281,7 @@ export default function PurchaseOrdersPage() {
                                     <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-4 -mt-4"></div>
                                     <div className="relative z-10">
                                         <div className="text-[10px] text-violet-200 uppercase tracking-wider font-semibold">เลข PO</div>
-                                        <div className="font-bold font-mono tracking-tight text-lg">{po.poNumber}</div>
+                                        <div className="font-bold font-mono tracking-tight text-lg">{formatPoNumber(po.poNumber)}</div>
                                     </div>
                                     <div className="text-right relative z-10">
                                         <div className="text-xl font-bold font-mono leading-none">{Number(po.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
@@ -295,9 +300,15 @@ export default function PurchaseOrdersPage() {
                                             <span className="font-bold text-red-600 text-xs sm:text-sm">{format(new Date(po.deliveryDate), "dd/MM/yyyy")}</span>
                                         </div>
                                     </div>
-                                    <div className="pt-1">
-                                        <span className="text-gray-400 text-[10px] font-bold uppercase block mb-1">ลูกค้า (Customer)</span>
-                                        <div className="font-semibold text-gray-800 text-sm line-clamp-1">{po.supplier.companyName}</div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-2 sm:items-end">
+                                        <div className="pt-1">
+                                            <span className="text-gray-400 text-[10px] font-bold uppercase block mb-1">ลูกค้า (Customer)</span>
+                                            <div className="font-semibold text-gray-800 text-sm line-clamp-1">{po.supplier.companyName}</div>
+                                        </div>
+                                        <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-100 text-right sm:min-w-[160px]">
+                                            <span className="text-emerald-600/70 text-[10px] font-bold uppercase block mb-0.5">วันที่ชำระ</span>
+                                            <span className="font-bold text-emerald-700 text-xs sm:text-sm">{po.paymentDate ? format(new Date(po.paymentDate), "dd/MM/yyyy") : "-"}</span>
+                                        </div>
                                     </div>
                                     <div className="border-t border-gray-100 pt-2 mt-2">
                                         <span className="text-gray-400 text-[10px] font-bold uppercase block mb-1">ตัวอย่างรายการสินค้า</span>

@@ -2,40 +2,42 @@ import { db } from "@/lib/db";
 import { format } from "date-fns";
 
 /**
- * Generates the next PO number in the format PO-YYYYMM-XXX.
- * Uses a raw SQL query with FOR UPDATE SKIP LOCKED to prevent race conditions
- * when multiple users create POs simultaneously.
- *
+ * Generates the next Production Order number in the format PROD-YYYYMMDD-XXX.
+ * Uses a similar pattern to PO number generation.
+ * 
  * Must be called inside a Prisma transaction.
  */
-export async function generatePoNumber(
+export async function generateProductionNumber(
     tx: Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">
 ): Promise<string> {
     const now = new Date();
     const thaiYear = now.getFullYear() + 543;
     const month = format(now, "MM");
-    const prefix = `TAX${thaiYear}-${month}-B`;
+    const day = format(now, "dd");
+    const datePart = `${thaiYear}${month}${day}`;
 
-    const lastPo = await tx.purchaseOrder.findFirst({
+    const prefix = `PROD-${datePart}-`;
+
+    const lastProduction = await tx.productionOrder.findFirst({
         where: {
-            poNumber: {
+            id: {
                 startsWith: prefix,
             },
         },
         orderBy: {
-            poNumber: "desc",
+            id: "desc",
         },
         select: {
-            poNumber: true,
+            id: true,
         },
     });
 
     let nextSequence = 1;
 
-    if (lastPo) {
-        const parts = lastPo.poNumber.split("-B");
-        if (parts.length === 2) {
-            const lastSequence = parseInt(parts[1], 10);
+    if (lastProduction) {
+        const parts = lastProduction.id.split("-");
+        if (parts.length === 3) {
+            const lastSequence = parseInt(parts[2], 10);
             if (!isNaN(lastSequence)) {
                 nextSequence = lastSequence + 1;
             }

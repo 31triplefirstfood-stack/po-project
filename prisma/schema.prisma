@@ -83,6 +83,7 @@ model PurchaseOrder {
   userId         String   @map("user_id")
   supplierId     String   @map("supplier_id")
   issueDate      DateTime @map("issue_date")
+  paymentDate    DateTime? @map("payment_date")
   deliveryDate   DateTime @map("delivery_date")
   subtotal       Decimal  @db.Decimal(19, 8)
   discountAmount Decimal  @default(0) @map("discount_amount") @db.Decimal(19, 8)
@@ -133,4 +134,46 @@ model ProductionOrder {
   purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
   @@map("production_orders")
+}
+
+model StockItem {
+  id         String   @id @default(cuid())
+  name       String
+  imageUrl   String?  @map("image_url")
+  unit       String
+  currentQty Decimal  @default(0) @map("current_qty") @db.Decimal(19, 8)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  restocks StockRestock[]
+  usages   StockUsage[]
+
+  @@map("stock_items")
+}
+
+model StockRestock {
+  id            String   @id @default(cuid())
+  stockItemId   String   @map("stock_item_id")
+  receiptNumber String   @map("receipt_number")
+  quantity      Decimal  @db.Decimal(19, 8)
+  date          DateTime
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@map("stock_restocks")
+}
+
+model StockUsage {
+  id          String    @id @default(cuid())
+  stockItemId String    @map("stock_item_id")
+  quantity    Decimal   @db.Decimal(19, 8)
+  date        DateTime
+  checkerName String?   @map("checker_name")
+  checkedAt   DateTime? @map("checked_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@map("stock_usages")
 }

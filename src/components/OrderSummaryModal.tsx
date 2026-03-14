@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { CheckSquare, Edit, ClipboardList } from "lucide-react";
+import { formatPoNumber } from "@/lib/utils";
 
 interface OrderSummaryModalProps {
     isOpen: boolean;
@@ -50,7 +51,7 @@ export function OrderSummaryModal({
                     <div className="bg-[#eff6ff] rounded-lg p-3 sm:p-5 text-sm space-y-2 sm:space-y-1">
                         <div className="flex flex-col sm:flex-row sm:gap-2">
                             <span className="font-bold text-gray-700 w-32">เลข PO:</span>
-                            <span className="font-bold text-[#2563EB]">{data.poNumber || "P025690218-P001(Mock)"}</span>
+                            <span className="font-bold text-[#2563EB]">{data.poNumber ? formatPoNumber(data.poNumber) : "AUTO-GEN"}</span>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:gap-2">
                             <span className="font-bold text-gray-700 w-32">ลูกค้า:</span>
@@ -118,7 +119,7 @@ export function OrderSummaryModal({
                             <span className="text-[#2563EB] font-bold text-lg sm:text-xl">{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
-                            <span className="text-gray-600 text-xs sm:text-sm">จำนวนสินค้าที่สั่งซื้อ (ห่อ):</span>
+                            <span className="text-gray-600 text-xs sm:text-sm">จำนวนสินค้าทั้งหมดที่สั่งซื้อ (ห่อ):</span>
                             <span className="text-gray-800 font-bold">{totalQuantity.toLocaleString()}</span>
                         </div>
                     </div>

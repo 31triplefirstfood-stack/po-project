@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import POTemplate from "@/components/pdf/POTemplate";
+import { formatPoNumber } from "@/lib/utils";
 
 interface POItem {
     id: string;
@@ -26,6 +27,7 @@ interface PurchaseOrder {
     poNumber: string;
     status: string;
     issueDate: string;
+    paymentDate?: string | null;
     deliveryDate: string;
     supplier: {
         companyName: string;
@@ -58,7 +60,10 @@ export default function PurchaseOrderDetailPage() {
             const res = await fetch(`/api/purchase-orders/${id}`);
             if (!res.ok) throw new Error("Failed to load PO");
             const data = await res.json();
-            setPo(data);
+            setPo({
+                ...data,
+                poNumber: formatPoNumber(data.poNumber),
+            });
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -96,8 +101,9 @@ export default function PurchaseOrderDetailPage() {
 
     // Transform data for PDF
     const pdfData = {
-        poNumber: po.poNumber,
+        poNumber: formatPoNumber(po.poNumber),
         issueDate: po.issueDate,
+        paymentDate: po.paymentDate ?? null,
         deliveryDate: po.deliveryDate,
         supplier: po.supplier,
         items: po.items.map(item => ({
@@ -128,7 +134,7 @@ export default function PurchaseOrderDetailPage() {
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{po.poNumber}</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">{formatPoNumber(po.poNumber)}</h1>
                         <p className="text-muted-foreground text-sm">Created on {new Date(po.issueDate).toLocaleDateString()}</p>
                     </div>
                     {getStatusBadge(po.status)}

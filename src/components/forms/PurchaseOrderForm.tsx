@@ -5,7 +5,7 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Plus, Trash2, Save, X, RefreshCw, FileText, CheckCircle, Loader2, Edit, Box } from "lucide-react";
+import { Plus, Trash2, Save, X, RefreshCw, FileText, CheckCircle, Loader2, Edit, Box } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,12 +24,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ProductCombobox } from "@/components/ProductCombobox";
@@ -47,6 +41,7 @@ const itemSchema = z.object({
 const poSchema = z.object({
     supplierId: z.string().min(1, "Supplier/Customer is required"),
     issueDate: z.date(),
+    paymentDate: z.date().nullable(),
     deliveryDate: z.date(),
     standardItems: z.array(itemSchema),
     manualItems: z.array(itemSchema),
@@ -94,6 +89,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
         defaultValues: {
             supplierId: "",
             issueDate: new Date(),
+            paymentDate: null,
             deliveryDate: new Date(),
             standardItems: [{ productId: "", quantity: "" as any, unitPrice: 0, unit: "", productName: "" }],
             manualItems: [{ productId: "", quantity: "" as any, unitPrice: 0, unit: "", productName: "" }],
@@ -221,6 +217,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
             reset({
                 supplierId: initialData?.supplierId || "",
                 issueDate: initialData ? new Date(initialData.issueDate) : new Date(),
+                paymentDate: initialData?.paymentDate ? new Date(initialData.paymentDate) : null,
                 deliveryDate: initialData ? new Date(initialData.deliveryDate) : new Date(),
                 standardItems: newStandard,
                 manualItems: newManual,
@@ -375,6 +372,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
             const payload = {
                 supplierId: data.supplierId,
                 issueDate: data.issueDate,
+                paymentDate: data.paymentDate,
                 deliveryDate: data.deliveryDate,
                 shippingCost: Number(data.shippingCost) || 0,
                 items: payloadItems,
@@ -446,19 +444,42 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col space-y-1.5">
                                         <FormLabel className="text-xs font-bold text-gray-500 uppercase tracking-wider">วันที่สั่งซื้อ (Issue Date)</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button variant={"outline"} className={cn("w-full pl-3 text-left font-medium border-gray-200 hover:bg-gray-50 h-10 transition-colors", !field.value && "text-muted-foreground")}>
-                                                        {field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                            </PopoverContent>
-                                        </Popover>
+                                        <FormControl>
+                                            <Input
+                                                type="date"
+                                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                                                onChange={(event) => {
+                                                    const value = event.target.value;
+                                                    if (value) {
+                                                        field.onChange(new Date(`${value}T00:00:00`));
+                                                    }
+                                                }}
+                                                className="h-10 border-gray-200 bg-white"
+                                            />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="col-span-1 md:col-span-3">
+                            <FormField
+                                control={control}
+                                name="paymentDate"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-col space-y-1.5">
+                                        <FormLabel className="text-xs font-bold text-amber-600 uppercase tracking-wider">วันที่ชำระ (Payment Date)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="date"
+                                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                                                onChange={(event) => {
+                                                    const value = event.target.value;
+                                                    field.onChange(value ? new Date(`${value}T00:00:00`) : null);
+                                                }}
+                                                className="h-10 border-amber-200 text-amber-700 bg-white"
+                                            />
+                                        </FormControl>
                                     </FormItem>
                                 )}
                             />
@@ -471,20 +492,19 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col space-y-1.5">
                                         <FormLabel className="text-xs font-bold text-red-500 uppercase tracking-wider">วันที่จัดส่ง (Delivery)</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button variant={"outline"} className={cn("w-full pl-3 text-left font-medium border-red-200 text-red-600 hover:bg-red-50 h-10 transition-colors", !field.value && "text-muted-foreground")}>
-                                                        {/* <span className="text-red-600">{field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}</span> */}
-                                                        {field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50 text-red-400" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                            </PopoverContent>
-                                        </Popover>
+                                        <FormControl>
+                                            <Input
+                                                type="date"
+                                                value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                                                onChange={(event) => {
+                                                    const value = event.target.value;
+                                                    if (value) {
+                                                        field.onChange(new Date(`${value}T00:00:00`));
+                                                    }
+                                                }}
+                                                className="h-10 border-red-200 text-red-600 bg-white"
+                                            />
+                                        </FormControl>
                                     </FormItem>
                                 )}
                             />

@@ -32,6 +32,7 @@ const createPoSchema = z.object({
     userId: z.string().optional(), // Made optional to allow server-side default
     supplierId: z.string().min(1, "Supplier is required"),
     issueDate: z.string().datetime({ offset: true }).or(z.string().date()),
+    paymentDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
     deliveryDate: z.string().datetime({ offset: true }).or(z.string().date()),
     discountAmount: z.number().min(0).default(0),
     shippingCost: z.number().min(0).default(0),
@@ -90,8 +91,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        let { userId, supplierId, issueDate, deliveryDate, discountAmount, shippingCost, notes, items } =
+        const { supplierId, issueDate, paymentDate, deliveryDate, discountAmount, shippingCost, notes, items } =
             validated.data;
+        let { userId } = validated.data;
 
         // If no userId provided, default to the first user
         if (!userId) {
@@ -162,6 +164,7 @@ export async function POST(request: NextRequest) {
                     userId,
                     supplierId,
                     issueDate: new Date(issueDate),
+                    paymentDate: paymentDate ? new Date(paymentDate) : null,
                     deliveryDate: new Date(deliveryDate),
                     subtotal,
                     discountAmount,

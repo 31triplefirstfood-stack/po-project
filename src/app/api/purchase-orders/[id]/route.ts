@@ -5,6 +5,7 @@ import { PoStatus } from "@prisma/client";
 
 const updatePoSchema = z.object({
     status: z.nativeEnum(PoStatus).optional(),
+    paymentDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
     deliveryDate: z.string().datetime({ offset: true }).or(z.string().date()).optional(),
     notes: z.string().optional(),
 });
@@ -84,6 +85,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
             where: { id },
             data: {
                 ...(validated.data.status && { status: validated.data.status }),
+                ...(validated.data.paymentDate !== undefined && { paymentDate: validated.data.paymentDate ? new Date(validated.data.paymentDate) : null }),
                 ...(validated.data.deliveryDate && { deliveryDate: new Date(validated.data.deliveryDate) }),
                 ...(validated.data.notes !== undefined && { notes: validated.data.notes }),
             },
@@ -155,6 +157,7 @@ const poItemSchema = z
 const updateFullPoSchema = z.object({
     supplierId: z.string().min(1, "Supplier is required"),
     issueDate: z.string().datetime({ offset: true }).or(z.string().date()),
+    paymentDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
     deliveryDate: z.string().datetime({ offset: true }).or(z.string().date()),
     shippingCost: z.number().min(0).default(0),
     items: z.array(poItemSchema).min(1, "At least one item is required"),
@@ -174,7 +177,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
             );
         }
 
-        const { supplierId, issueDate, deliveryDate, shippingCost, items } = validated.data;
+        const { supplierId, issueDate, paymentDate, deliveryDate, shippingCost, items } = validated.data;
 
         // Check if PO exists
         const existingPo = await db.purchaseOrder.findUnique({ where: { id } });
@@ -206,6 +209,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
                 data: {
                     supplierId,
                     issueDate: new Date(issueDate),
+                    paymentDate: paymentDate ? new Date(paymentDate) : null,
                     deliveryDate: new Date(deliveryDate),
                     shippingCost,
                     subtotal,
