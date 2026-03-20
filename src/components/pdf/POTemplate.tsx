@@ -369,8 +369,7 @@ const POTemplate = ({ data }: { data: POData }) => {
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const vatRate = 0.07;
     const vatAmount = subtotal * vatRate;
-    const shippingCost = 0;
-    const grandTotal = subtotal + vatAmount + shippingCost;
+    const grandTotal = subtotal + vatAmount;
     const totalQty = data.items.reduce((sum, item) => sum + Number(item.quantity), 0);
     const thaiText = thaiBahtText(grandTotal);
     const formatThaiDate = (value?: string | null) => {
@@ -598,7 +597,7 @@ const POTemplate = ({ data }: { data: POData }) => {
                             <Text style={styles.signatureText}> </Text>
                             <View style={{ flexDirection: 'row', marginTop: 5 }}>
                                 <Text style={styles.signatureText}> </Text>
-                                <Text style={{ fontSize: 9 }}>วันที่ ________________________________</Text>
+                                <Text style={{ fontSize: 9 }}>วันที่ {paymentDateText || "________________________________"}</Text>
                             </View>
                         </View>
                     </View>

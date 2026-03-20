@@ -36,7 +36,7 @@ interface ProductionOrder {
         subtotal: number;
         vatAmount: number;
         discountAmount: number;
-        shippingCost: number;
+
         notes: string | null;
         supplier: {
             companyName: string;

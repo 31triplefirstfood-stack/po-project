@@ -46,7 +46,6 @@ const poSchema = z.object({
     standardItems: z.array(itemSchema),
     manualItems: z.array(itemSchema),
     otherItems: z.array(itemSchema),
-    shippingCost: z.coerce.number().min(0).default(0),
 });
 
 type PoFormValues = z.infer<typeof poSchema>;
@@ -94,7 +93,6 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
             standardItems: [{ productId: "", quantity: "" as any, unitPrice: 0, unit: "", productName: "" }],
             manualItems: [{ productId: "", quantity: "" as any, unitPrice: 0, unit: "", productName: "" }],
             otherItems: [],
-            shippingCost: 0,
         },
     });
 
@@ -222,7 +220,6 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                 standardItems: newStandard,
                 manualItems: newManual,
                 otherItems: other,
-                shippingCost: initialData?.shippingCost || 0,
             });
         }
     }, [initialData, products, reset]); // Removed suppliers to avoid reset on supplier load alone? logic needs products mostly.
@@ -314,7 +311,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
     const standardItems = watch("standardItems");
     const manualItems = watch("manualItems");
     const otherItems = watch("otherItems");
-    const shippingCost = watch("shippingCost") || 0;
+
 
     const calculateTotal = (items: any[]) =>
         items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0);
@@ -327,7 +324,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
 
     const vatRate = 0.07;
     const vatAmount = subtotal * vatRate;
-    const grandTotal = subtotal + vatAmount + Number(shippingCost);
+    const grandTotal = subtotal + vatAmount;
 
     // ── Handlers ──
     const handleReview = (data: PoFormValues) => {
@@ -374,7 +371,6 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                 issueDate: data.issueDate,
                 paymentDate: data.paymentDate,
                 deliveryDate: data.deliveryDate,
-                shippingCost: Number(data.shippingCost) || 0,
                 items: payloadItems,
             };
 
@@ -755,22 +751,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                         )}
                     </div>
 
-                    {/* ── Footer Shipping ── */}
-                    <div className="bg-gray-50 rounded-xl p-4 flex flex-col md:flex-row md:justify-end items-center gap-4 border border-gray-200 shadow-inner">
-                        <div className="flex items-center gap-2 text-gray-600">
-                            <Box className="w-5 h-5" />
-                            <span className="font-semibold text-sm">ค่าขนส่ง (Shipping Cost)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="number"
-                                step="0.00000001"
-                                {...form.register("shippingCost")}
-                                className="w-32 bg-white border-gray-300 text-right pr-4 font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 h-10"
-                            />
-                            <span className="text-sm text-gray-500">THB</span>
-                        </div>
-                    </div>
+
 
                     {/* ── Footer Summary ── */}
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl text-white p-4 sm:p-6 shadow-lg transform transition-all hover:scale-[1.005] duration-300">

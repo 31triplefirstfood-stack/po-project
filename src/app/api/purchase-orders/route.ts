@@ -35,7 +35,6 @@ const createPoSchema = z.object({
     paymentDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
     deliveryDate: z.string().datetime({ offset: true }).or(z.string().date()),
     discountAmount: z.number().min(0).default(0),
-    shippingCost: z.number().min(0).default(0),
     notes: z.string().optional(),
     items: z.array(poItemSchema).min(1, "At least one item is required"),
 });
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { supplierId, issueDate, paymentDate, deliveryDate, discountAmount, shippingCost, notes, items } =
+        const { supplierId, issueDate, paymentDate, deliveryDate, discountAmount, notes, items } =
             validated.data;
         let { userId } = validated.data;
 
@@ -114,7 +113,7 @@ export async function POST(request: NextRequest) {
             itemsWithTotals.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(8)
         );
         const vatAmount = Number(((subtotal - discountAmount) * VAT_RATE).toFixed(8));
-        const grandTotal = Number((subtotal - discountAmount + vatAmount + shippingCost).toFixed(8));
+        const grandTotal = Number((subtotal - discountAmount + vatAmount).toFixed(8));
 
         // ── Create PO inside a transaction with PO number lock ──────────────────
         const purchaseOrder = await db.$transaction(async (tx) => {
@@ -170,7 +169,7 @@ export async function POST(request: NextRequest) {
                     discountAmount,
                     vatAmount,
                     grandTotal,
-                    shippingCost,
+
                     notes,
                     status: "DRAFT",
                     items: {

@@ -110,10 +110,7 @@ export function OrderSummaryModal({
                             <span>ภาษีมูลค่าเพิ่ม 7%:</span>
                             <span>{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} บาท</span>
                         </div>
-                        <div className="flex justify-between items-center text-gray-600 text-sm sm:text-base">
-                            <span>ค่าขนส่ง:</span>
-                            <span>{Number(data.shippingCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 })} บาท</span>
-                        </div>
+
                         <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                             <span className="text-[#2563EB] font-bold text-base sm:text-lg">รายรับสุทธิ:</span>
                             <span className="text-[#2563EB] font-bold text-lg sm:text-xl">{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท</span>

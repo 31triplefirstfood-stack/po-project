@@ -159,7 +159,6 @@ const updateFullPoSchema = z.object({
     issueDate: z.string().datetime({ offset: true }).or(z.string().date()),
     paymentDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
     deliveryDate: z.string().datetime({ offset: true }).or(z.string().date()),
-    shippingCost: z.number().min(0).default(0),
     items: z.array(poItemSchema).min(1, "At least one item is required"),
 });
 
@@ -177,7 +176,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
             );
         }
 
-        const { supplierId, issueDate, paymentDate, deliveryDate, shippingCost, items } = validated.data;
+        const { supplierId, issueDate, paymentDate, deliveryDate, items } = validated.data;
 
         // Check if PO exists
         const existingPo = await db.purchaseOrder.findUnique({ where: { id } });
@@ -200,7 +199,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         const discountAmount = Number(existingPo.discountAmount || 0);
 
         const vatAmount = Number(((subtotal - discountAmount) * VAT_RATE).toFixed(8));
-        const grandTotal = Number((subtotal - discountAmount + vatAmount + shippingCost).toFixed(8));
+        const grandTotal = Number((subtotal - discountAmount + vatAmount).toFixed(8));
 
         const updatedPo = await db.$transaction(async (tx) => {
             // 1. Update PO details
@@ -211,7 +210,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
                     issueDate: new Date(issueDate),
                     paymentDate: paymentDate ? new Date(paymentDate) : null,
                     deliveryDate: new Date(deliveryDate),
-                    shippingCost,
+
                     subtotal,
                     vatAmount,
                     grandTotal,

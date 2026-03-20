@@ -47,7 +47,7 @@ interface PurchaseOrder {
     paymentDate?: string | null;
     deliveryDate: string;
     grandTotal: number;
-    shippingCost: number;
+
     supplier: {
         companyName: string;
     };

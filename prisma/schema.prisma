@@ -89,7 +89,7 @@ model PurchaseOrder {
   discountAmount Decimal  @default(0) @map("discount_amount") @db.Decimal(19, 8)
   vatAmount      Decimal  @map("vat_amount") @db.Decimal(19, 8)
   grandTotal     Decimal  @map("grand_total") @db.Decimal(19, 8)
-  shippingCost   Decimal  @default(0) @map("shipping_cost") @db.Decimal(19, 8)
+
   status         PoStatus @default(DRAFT)
   notes          String?
   createdAt      DateTime @default(now()) @map("created_at")
