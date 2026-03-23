@@ -5,7 +5,11 @@ import { z } from "zod";
 import { ProductionStatus } from "@prisma/client";
 
 const createProductionOrderSchema = z.object({
-    purchaseOrderId: z.string().min(1, "Purchase Order ID is required"),
+    purchaseOrderId: z.string().optional(),
+    manualPoNumber: z.string().optional(),
+    customerName: z.string().optional(),
+    productName: z.string().optional(),
+    quantity: z.number().min(0).optional(),
     extraRequestQty: z.number().min(0).optional(),
     problemNote: z.string().optional(),
 });
@@ -29,6 +33,8 @@ export async function GET(request: NextRequest) {
                 ...(search && {
                     OR: [
                         { id: { contains: search, mode: "insensitive" } },
+                        { poNumber: { contains: search, mode: "insensitive" } },
+                        { customerName: { contains: search, mode: "insensitive" } },
                         { purchaseOrder: { poNumber: { contains: search, mode: "insensitive" } } },
                         { purchaseOrder: { supplier: { companyName: { contains: search, mode: "insensitive" } } } },
                     ],
@@ -69,49 +75,71 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { purchaseOrderId, extraRequestQty, problemNote } = validated.data;
+        const { purchaseOrderId, manualPoNumber, customerName, productName, quantity, extraRequestQty, problemNote } = validated.data;
+
+        if (!purchaseOrderId && !manualPoNumber) {
+            return NextResponse.json({ error: "Purchase Order ID or Manual PO Number is required" }, { status: 400 });
+        }
 
         const productionOrder = await db.$transaction(async (tx) => {
-            const purchaseOrder = await tx.purchaseOrder.findUnique({
-                where: { id: purchaseOrderId },
-                include: {
-                    productionOrder: true,
-                },
-            });
+            if (purchaseOrderId) {
+                const purchaseOrder = await tx.purchaseOrder.findUnique({
+                    where: { id: purchaseOrderId },
+                    include: {
+                        productionOrder: true,
+                    },
+                });
 
-            if (!purchaseOrder) {
-                throw new Error("Purchase Order not found");
-            }
+                if (!purchaseOrder) {
+                    throw new Error("Purchase Order not found");
+                }
 
-            if (purchaseOrder.productionOrder) {
-                throw new Error("Production Order already exists for this Purchase Order");
-            }
+                if (purchaseOrder.productionOrder) {
+                    throw new Error("Production Order already exists for this Purchase Order");
+                }
 
-            const productionNumber = await generateProductionNumber(tx);
+                const productionNumber = await generateProductionNumber(tx);
 
-            return tx.productionOrder.create({
-                data: {
-                    id: productionNumber,
-                    purchaseOrderId,
-                    status: "PENDING",
-                    extraRequestQty,
-                    problemNote,
-                    stockDeducted: false,
-                },
-                include: {
-                    purchaseOrder: {
-                        include: {
-                            supplier: true,
-                            user: { select: { id: true, name: true } },
-                            items: {
-                                include: {
-                                    product: true,
+                return tx.productionOrder.create({
+                    data: {
+                        id: productionNumber,
+                        purchaseOrderId,
+                        status: "PENDING",
+                        extraRequestQty,
+                        problemNote,
+                        stockDeducted: false,
+                    },
+                    include: {
+                        purchaseOrder: {
+                            include: {
+                                supplier: true,
+                                user: { select: { id: true, name: true } },
+                                items: {
+                                    include: {
+                                        product: true,
+                                    },
                                 },
                             },
                         },
                     },
-                },
-            });
+                });
+            } else {
+                const productionNumber = await generateProductionNumber(tx);
+
+                return tx.productionOrder.create({
+                    data: {
+                        id: productionNumber,
+                        poNumber: manualPoNumber,
+                        customerName: customerName,
+                        productName: productName || "เส้น 50 กิโล",
+                        quantity: quantity || 1,
+                        status: "PENDING",
+                        extraRequestQty,
+                        problemNote,
+                        stockDeducted: false,
+                    }
+                });
+            }
         }, {
             maxWait: 5000,
             timeout: 15000,

@@ -121,7 +121,11 @@ model PoItem {
 
 model ProductionOrder {
   id              String           @id @default(cuid())
-  purchaseOrderId String           @unique @map("purchase_order_id")
+  purchaseOrderId String?          @unique @map("purchase_order_id")
+  poNumber        String?          @map("po_number")
+  customerName    String?          @map("customer_name")
+  productName     String?          @default("เส้น 50 กิโล") @map("product_name")
+  quantity        Decimal?         @default(1) @db.Decimal(19, 8)
   status          ProductionStatus @default(PENDING)
   problemNote     String?          @map("problem_note")
   extraRequestQty Decimal?         @map("extra_request_qty") @db.Decimal(19, 8)
@@ -131,7 +135,7 @@ model ProductionOrder {
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
 
-  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
   @@map("production_orders")
 }

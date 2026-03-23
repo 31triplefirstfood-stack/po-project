@@ -27,7 +27,7 @@ interface ProductionOrder {
     startedAt: string | null;
     completedAt: string | null;
     createdAt: string;
-    purchaseOrder: {
+    purchaseOrder?: {
         id: string;
         poNumber: string;
         issueDate: string;
@@ -59,7 +59,11 @@ interface ProductionOrder {
             unitPrice: number;
             totalPrice: number;
         }[];
-    };
+    } | null;
+    poNumber?: string | null;
+    customerName?: string | null;
+    productName?: string | null;
+    quantity?: number | null;
 }
 
 export default function ProductionDetailPage() {
@@ -208,25 +212,42 @@ export default function ProductionDetailPage() {
                     กลับไปหน้ารายการ
                 </Button>
 
-                <div className={cn("bg-gradient-to-r text-white p-6 rounded-xl shadow-lg", statusConfig.gradient)}>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <Factory className="w-8 h-8" />
-                                <div>
-                                    <div className="text-sm opacity-90">เลขที่การผลิต</div>
-                                    <div className="text-2xl font-bold font-mono">{production.id}</div>
+                {(() => {
+                    const totalQty = production.purchaseOrder 
+                        ? production.purchaseOrder.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+                        : Number(production.quantity || 0);
+
+                    return (
+                        <div className={cn("bg-gradient-to-r text-white p-6 rounded-xl shadow-lg", statusConfig.gradient)}>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <Factory className="w-8 h-8" />
+                                        <div>
+                                            <div className="text-sm opacity-90">เลขที่การผลิต</div>
+                                            <div className="text-2xl font-bold font-mono">{production.id}</div>
+                                        </div>
+                                    </div>
+                                    <div className="h-10 w-px bg-white/20 mx-2 hidden sm:block"></div>
+                                    <div className="hidden sm:block">
+                                        <div className="text-sm opacity-90">จำนวนผลิตทั้งหมด</div>
+                                        <div className="text-2xl font-bold font-mono">{totalQty.toLocaleString()}</div>
+                                    </div>
+                                </div>
+                                <div className="text-right flex flex-col items-end gap-2">
+                                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                                        <StatusIcon className="w-5 h-5" />
+                                        <span className="font-bold">{statusConfig.label}</span>
+                                    </div>
+                                    <div className="sm:hidden text-right">
+                                        <div className="text-[10px] opacity-80 uppercase font-bold">จำนวนผลิตทั้งหมด</div>
+                                        <div className="text-lg font-bold font-mono">{totalQty.toLocaleString()}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="text-right">
-                            <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-                                <StatusIcon className="w-5 h-5" />
-                                <span className="font-bold">{statusConfig.label}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    );
+                })()}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -237,32 +258,43 @@ export default function ProductionDetailPage() {
                         <div className="space-y-3">
                             <div className="bg-violet-50 p-3 rounded-lg border border-violet-100">
                                 <div className="text-xs text-violet-600 font-semibold mb-1">เลข PO</div>
-                                <div className="font-bold text-gray-800">{formatPoNumber(production.purchaseOrder.poNumber)}</div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
-                                    <div className="text-xs text-orange-600 font-semibold mb-1">วันที่สั่ง</div>
-                                    <div className="font-bold text-gray-800 text-sm">
-                                        {format(new Date(production.purchaseOrder.issueDate), "dd/MM/yyyy")}
-                                    </div>
-                                </div>
-                                <div className="bg-red-50 p-3 rounded-lg border border-red-100">
-                                    <div className="text-xs text-red-600 font-semibold mb-1">วันส่ง</div>
-                                    <div className="font-bold text-red-600 text-sm">
-                                        {format(new Date(production.purchaseOrder.deliveryDate), "dd/MM/yyyy")}
-                                    </div>
+                                <div className="font-bold text-gray-800">
+                                    {production.purchaseOrder ? formatPoNumber(production.purchaseOrder.poNumber) : production.poNumber || "-"}
                                 </div>
                             </div>
-                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                <div className="text-xs text-gray-600 font-semibold mb-1">ลูกค้า</div>
-                                <div className="font-bold text-gray-800">{production.purchaseOrder.supplier.companyName}</div>
-                                {production.purchaseOrder.supplier.contactPerson && (
-                                    <div className="text-sm text-gray-600 mt-1">ผู้ติดต่อ: {production.purchaseOrder.supplier.contactPerson}</div>
-                                )}
-                                {production.purchaseOrder.supplier.phone && (
-                                    <div className="text-sm text-gray-600">โทร: {production.purchaseOrder.supplier.phone}</div>
-                                )}
-                            </div>
+                            {production.purchaseOrder ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                            <div className="text-xs text-orange-600 font-semibold mb-1">วันที่สั่ง</div>
+                                            <div className="font-bold text-gray-800 text-sm">
+                                                {format(new Date(production.purchaseOrder.issueDate), "dd/MM/yyyy")}
+                                            </div>
+                                        </div>
+                                        <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                                            <div className="text-xs text-red-600 font-semibold mb-1">วันส่ง</div>
+                                            <div className="font-bold text-red-600 text-sm">
+                                                {format(new Date(production.purchaseOrder.deliveryDate), "dd/MM/yyyy")}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div className="text-xs text-gray-600 font-semibold mb-1">ลูกค้า</div>
+                                        <div className="font-bold text-gray-800">{production.purchaseOrder.supplier.companyName}</div>
+                                        {production.purchaseOrder.supplier.contactPerson && (
+                                            <div className="text-sm text-gray-600 mt-1">ผู้ติดต่อ: {production.purchaseOrder.supplier.contactPerson}</div>
+                                        )}
+                                        {production.purchaseOrder.supplier.phone && (
+                                            <div className="text-sm text-gray-600">โทร: {production.purchaseOrder.supplier.phone}</div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <div className="text-xs text-gray-600 font-semibold mb-1">ลูกค้า</div>
+                                    <div className="font-bold text-gray-800">{production.customerName || "-"}</div>
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -345,34 +377,60 @@ export default function ProductionDetailPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {production.purchaseOrder.items.map((item, idx) => (
-                                    <tr key={item.id} className={cn("border-b border-gray-100", idx % 2 === 0 ? "bg-gray-50" : "bg-white")}>
-                                        <td className="py-3 px-4 text-sm text-gray-800">
-                                            {item.product?.name || item.itemName || "Unknown"}
+                                {production.purchaseOrder ? (
+                                    production.purchaseOrder.items.map((item, idx) => (
+                                        <tr key={item.id} className={cn("border-b border-gray-100", idx % 2 === 0 ? "bg-gray-50" : "bg-white")}>
+                                            <td className="py-3 px-4 text-sm text-gray-800">
+                                                {item.product?.name || item.itemName || "Unknown"}
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-gray-600 font-mono">
+                                                {item.product?.sku || "-"}
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-right font-bold text-gray-800">
+                                                {Number(item.quantity).toLocaleString()}
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-right text-gray-600">
+                                                {item.product?.unit || "-"}
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-right text-gray-600 font-mono">
+                                                {Number(item.unitPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-right font-bold text-gray-800 font-mono">
+                                                {Number(item.totalPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr className="bg-gray-50 border-b border-gray-100">
+                                        <td className="py-3 px-4 text-sm text-gray-800 font-bold">
+                                            {production.productName || "เส้น 50 กิโล"}
                                         </td>
                                         <td className="py-3 px-4 text-sm text-gray-600 font-mono">
-                                            {item.product?.sku || "-"}
+                                            -
                                         </td>
-                                        <td className="py-3 px-4 text-sm text-right font-bold text-gray-800">
-                                            {Number(item.quantity).toLocaleString()}
+                                        <td className="py-3 px-4 text-sm text-right font-bold text-emerald-600">
+                                            {Number(production.quantity || 1).toLocaleString()}
                                         </td>
                                         <td className="py-3 px-4 text-sm text-right text-gray-600">
-                                            {item.product?.unit || "-"}
+                                            ชุด/กระสอบ
                                         </td>
                                         <td className="py-3 px-4 text-sm text-right text-gray-600 font-mono">
-                                            {Number(item.unitPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            -
                                         </td>
                                         <td className="py-3 px-4 text-sm text-right font-bold text-gray-800 font-mono">
-                                            {Number(item.totalPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            -
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                             <tfoot className="bg-gray-100 font-bold">
                                 <tr>
                                     <td colSpan={5} className="py-3 px-4 text-right text-sm">รวมทั้งหมด:</td>
                                     <td className="py-3 px-4 text-right text-lg text-emerald-700 font-mono">
-                                        ฿{Number(production.purchaseOrder.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        {production.purchaseOrder 
+                                            ? `฿${Number(production.purchaseOrder.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                            : "-"
+                                        }
                                     </td>
                                 </tr>
                             </tfoot>
@@ -380,7 +438,7 @@ export default function ProductionDetailPage() {
                     </div>
                 </div>
 
-                {production.purchaseOrder.notes && (
+                {production.purchaseOrder?.notes && (
                     <div className="bg-amber-50 rounded-xl shadow-sm p-6 border border-amber-200">
                         <div className="flex items-center gap-2 mb-2">
                             <AlertTriangle className="w-5 h-5 text-amber-600" />

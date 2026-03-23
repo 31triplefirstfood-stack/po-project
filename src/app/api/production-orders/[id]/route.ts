@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 
 const updateProductionOrderSchema = z.object({
     status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "PROBLEM"]).optional(),
@@ -65,8 +66,68 @@ export async function PUT(
             updateData.startedAt = new Date();
         }
 
-        if (validated.data.status === "COMPLETED" && !updateData.completedAt) {
-            updateData.completedAt = new Date();
+        if (validated.data.status === "COMPLETED") {
+            if (!updateData.completedAt) updateData.completedAt = new Date();
+
+            const currentOrder = await db.productionOrder.findUnique({
+                where: { id },
+                select: { stockDeducted: true, quantity: true }
+            });
+
+            if (currentOrder && !currentOrder.stockDeducted) {
+                const qty = Number(currentOrder.quantity || 1);
+                const scalingFactor = qty / 78;
+
+                const ingredients = [
+                    { name: "แป้ง", standardAmount: 22.5 },
+                    { name: "เกลือ", standardAmount: 0.5 },
+                    { name: "สารกันบูด", standardAmount: 0.3 },
+                    { name: "น้ำมัน", standardAmount: 1.5 },
+                ];
+
+                const transactions: any[] = [];
+                const foundIngredients: string[] = [];
+
+                for (const ing of ingredients) {
+                    const item = await db.stockItem.findFirst({
+                        where: { name: { contains: ing.name, mode: "insensitive" } }
+                    });
+
+                    if (item) {
+                        const usageAmount = ing.standardAmount * scalingFactor;
+                        transactions.push(
+                            db.stockUsage.create({
+                                data: {
+                                    stockItemId: item.id,
+                                    quantity: new Prisma.Decimal(usageAmount),
+                                    date: new Date(),
+                                    checkerName: "ระบบ (อัตโนมัติ)",
+                                }
+                            })
+                        );
+                        transactions.push(
+                            db.stockItem.update({
+                                where: { id: item.id },
+                                data: {
+                                    currentQty: { decrement: new Prisma.Decimal(usageAmount) }
+                                }
+                            })
+                        );
+                        foundIngredients.push(ing.name);
+                    }
+                }
+
+                if (transactions.length > 0) {
+                    await db.$transaction([
+                        ...transactions,
+                        db.productionOrder.update({
+                            where: { id },
+                            data: { stockDeducted: true }
+                        })
+                    ]);
+                    updateData.stockDeducted = true;
+                }
+            }
         }
 
         const productionOrder = await db.productionOrder.update({
