@@ -11,10 +11,10 @@ export default function NavTabs() {
 
     const tabs = [
         { name: 'สร้างออเดอร์', href: '/purchase-orders/create', icon: FileText },
+        { name: 'เมนูการผลิต', href: '/production', icon: Factory },
         { name: 'PO ทั้งหมด', href: '/purchase-orders', icon: List },
-        { name: 'ข้อมูลลูกค้า', href: '/customers', icon: Users },
         { name: 'จัดการสต็อก', href: '/stock', icon: Warehouse },
-        { name: 'หน้าการผลิต', href: '/production', icon: Factory },
+        { name: 'ข้อมูลลูกค้า', href: '/customers', icon: Users },
     ];
 
     return (

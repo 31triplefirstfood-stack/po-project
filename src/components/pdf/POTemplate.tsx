@@ -428,7 +428,7 @@ const POTemplate = ({ data }: { data: POData }) => {
 
         return lines.filter(Boolean);
     };
-    const paymentDateText = formatThaiDate(data.paymentDate);
+    const paymentDateText = formatThaiDate(data.paymentDate || data.issueDate);
     const dueDateText = 'เครดิต 30 วัน';
     const addressLines = splitAddressLines(data.supplier.address);
 
@@ -529,17 +529,17 @@ const POTemplate = ({ data }: { data: POData }) => {
                                 <Text style={styles.colTotal}>{(item.quantity * item.unitPrice).toLocaleString(undefined, { minimumFractionDigits: 8, maximumFractionDigits: 8 })}</Text>
                             </View>
                         ))}
-                        {/* Total Quantity Row */}
-                        <View style={styles.tableRow}>
-                            <Text style={{ width: '50%', paddingLeft: 4 }}>จำนวนสินค้าทั้งหมดที่สั่งซื้อ ({data.items[0]?.unit || 'ห่อ'})</Text>
-                            <Text style={styles.colQty}>{totalQty}</Text>
-                            <Text style={{ width: '40%' }}></Text>
-                        </View>
+
                     </View>
 
                     {/* Summary */}
                     {/* Summary */}
                     <View style={styles.summaryTable}>
+                        {/* Row 0: Total Items Qty */}
+                        <View style={styles.summaryRow}>
+                            <Text style={styles.summaryLabelCol}>จำนวนสินค้าทั้งหมดที่สั่งซื้อ ({data.items[0]?.unit || 'ห่อ'}) </Text>
+                            <Text style={styles.summaryValueCol}>{totalQty} </Text>
+                        </View>
                         {/* Row 1: Subtotal */}
                         <View style={styles.summaryRow}>
                             <Text style={styles.summaryLabelCol}>ราคาสินค้าก่อนภาษีมูลค่าเพิ่ม </Text>

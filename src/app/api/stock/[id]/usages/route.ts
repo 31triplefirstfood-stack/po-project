@@ -7,7 +7,7 @@ const usageSchema = z.object({
     quantity: z.number().positive("จำนวนต้องมากกว่า 0"),
     date: z.string().datetime(),
     checkerName: z.string().optional(),
-    checkedAt: z.string().datetime().optional(),
+    note: z.string().optional(),
 });
 
 export async function GET(
@@ -75,7 +75,7 @@ export async function POST(
                     quantity: new Prisma.Decimal(validated.data.quantity),
                     date: new Date(validated.data.date),
                     checkerName: validated.data.checkerName || null,
-                    checkedAt: validated.data.checkedAt ? new Date(validated.data.checkedAt) : null,
+                    note: validated.data.note || null,
                 },
             });
 

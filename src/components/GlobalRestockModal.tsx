@@ -37,8 +37,8 @@ import { cn } from "@/lib/utils";
 
 const restockSchema = z.object({
     stockItemId: z.string().min(1, "กรุณาเลือกวัตถุดิบ"),
-    receiptNumber: z.string().min(1, "กรุณาระบุเลขใบเสร็จ"),
-    quantity: z.coerce.number().positive("จำนวนต้องมากกว่า 0"),
+    receiptNumber: z.string().optional(),
+    quantity: z.coerce.number().min(0).optional(),
     date: z.date(),
 });
 
@@ -65,7 +65,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
         defaultValues: {
             stockItemId: "",
             receiptNumber: "",
-            quantity: 0,
+            quantity: "" as any,
             date: new Date(),
         },
     });
@@ -81,7 +81,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
         form.reset({
             stockItemId: "",
             receiptNumber: "",
-            quantity: 0,
+            quantity: "" as any,
             date: new Date(),
         });
     }, [isOpen, form]);
@@ -92,8 +92,8 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    receiptNumber: data.receiptNumber,
-                    quantity: data.quantity,
+                    receiptNumber: data.receiptNumber || "-",
+                    quantity: data.quantity || 0,
                     date: data.date.toISOString(),
                 }),
             });
@@ -189,7 +189,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
                                     <FormItem>
                                         <FormLabel className="text-gray-700 font-medium">จำนวน</FormLabel>
                                         <FormControl>
-                                            <Input type="number" step="0.01" placeholder="0" {...field} className="border-gray-300" />
+                                            <Input type="number" step="0.01" placeholder="0" {...field} value={field.value ?? ""} className="border-gray-300" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

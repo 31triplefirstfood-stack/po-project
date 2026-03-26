@@ -40,7 +40,7 @@ const usageSchema = z.object({
     quantity: z.coerce.number().positive("จำนวนต้องมากกว่า 0"),
     date: z.date(),
     checkerName: z.string().optional(),
-    checkedAt: z.date().optional(),
+    note: z.string().optional(),
 });
 
 type UsageFormValues = z.infer<typeof usageSchema>;
@@ -69,7 +69,7 @@ export function GlobalUsageModal({ isOpen, onClose, onSuccess, stockItems }: Glo
             quantity: 0,
             date: new Date(),
             checkerName: "",
-            checkedAt: undefined,
+            note: "",
         },
     });
 
@@ -86,7 +86,7 @@ export function GlobalUsageModal({ isOpen, onClose, onSuccess, stockItems }: Glo
             quantity: 0,
             date: new Date(),
             checkerName: "",
-            checkedAt: undefined,
+            note: "",
         });
     }, [isOpen, form]);
 
@@ -99,7 +99,7 @@ export function GlobalUsageModal({ isOpen, onClose, onSuccess, stockItems }: Glo
                     quantity: data.quantity,
                     date: data.date.toISOString(),
                     checkerName: data.checkerName || undefined,
-                    checkedAt: data.checkedAt ? data.checkedAt.toISOString() : undefined,
+                    note: data.note || undefined,
                 }),
             });
 
@@ -228,10 +228,10 @@ export function GlobalUsageModal({ isOpen, onClose, onSuccess, stockItems }: Glo
                                     <FormItem>
                                         <FormLabel className="text-gray-700 font-medium flex items-center gap-2">
                                             <UserCheck className="w-4 h-4" />
-                                            ผู้ตรวจสอบ
+                                            ผู้เบิก
                                         </FormLabel>
                                         <FormControl>
-                                            <Input placeholder="ชื่อผู้ตรวจสอบ" {...field} className="border-gray-300" />
+                                            <Input placeholder="ชื่อผู้เบิก" {...field} className="border-gray-300" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -241,29 +241,13 @@ export function GlobalUsageModal({ isOpen, onClose, onSuccess, stockItems }: Glo
 
                         <FormField
                             control={form.control}
-                            name="checkedAt"
+                            name="note"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-700 font-medium">วันที่ตรวจสอบ</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "w-full justify-start pl-3 text-left font-normal border-gray-300",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value ? format(field.value, "dd/MM/yyyy") : <span>เลือกวันที่</span>}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                        </PopoverContent>
-                                    </Popover>
+                                    <FormLabel className="text-gray-700 font-medium">หมายเหตุ</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="ระบุหมายเหตุ (ถ้ามี)" {...field} className="border-gray-300" />
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}

@@ -47,17 +47,30 @@ export async function GET(request: NextRequest) {
         const supplierId = searchParams.get("supplierId");
         const search = searchParams.get("search") ?? "";
 
-        const purchaseOrders = await db.purchaseOrder.findMany({
-            where: {
-                ...(status && { status }),
-                ...(supplierId && { supplierId }),
-                ...(search && {
+        const whereClause: any = {
+            ...(status && { status }),
+            ...(supplierId && { supplierId }),
+            AND: [
+                {
                     OR: [
-                        { poNumber: { contains: search, mode: "insensitive" } },
-                        { supplier: { companyName: { contains: search, mode: "insensitive" } } },
-                    ],
-                }),
-            },
+                        { productionOrder: null },
+                        { productionOrder: { status: "COMPLETED" } }
+                    ]
+                }
+            ]
+        };
+
+        if (search) {
+            whereClause.AND.push({
+                OR: [
+                    { poNumber: { contains: search, mode: "insensitive" } },
+                    { supplier: { companyName: { contains: search, mode: "insensitive" } } },
+                ]
+            });
+        }
+
+        const purchaseOrders = await db.purchaseOrder.findMany({
+            where: whereClause,
             include: {
                 supplier: { select: { id: true, companyName: true } },
                 user: { select: { id: true, name: true } },
@@ -182,6 +195,11 @@ export async function POST(request: NextRequest) {
                             totalPrice: item.totalPrice,
                         })),
                     },
+                    productionOrder: {
+                        create: {
+                            status: "PENDING"
+                        }
+                    }
                 },
                 include: {
                     supplier: true,

@@ -83,6 +83,7 @@ export async function PUT(
                     { name: "เกลือ", standardAmount: 0.5 },
                     { name: "สารกันบูด", standardAmount: 0.3 },
                     { name: "น้ำมัน", standardAmount: 1.5 },
+                    { name: "โซเดียมใบคาร์บอเนต", standardAmount: 0.5 },
                 ];
 
                 const transactions: any[] = [];

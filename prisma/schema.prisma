@@ -175,6 +175,7 @@ model StockUsage {
   date        DateTime
   checkerName String?   @map("checker_name")
   checkedAt   DateTime? @map("checked_at")
+  note        String?
   createdAt   DateTime  @default(now()) @map("created_at")
 
   stockItem StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
