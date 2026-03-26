@@ -16,3 +16,5 @@ check()
     .finally(async () => {
         await prisma.$disconnect();
     });
+
+export {};
