@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Eye, Trash2, RefreshCw, Factory, PlayCircle, Clock, Edit } from "lucide-react";
+import { Eye, Trash2, RefreshCw, Factory, PlayCircle, Clock, Edit, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -66,6 +66,7 @@ export default function ProductionPage() {
     const [productions, setProductions] = useState<ProductionOrder[]>([]);
     const [filteredProductions, setFilteredProductions] = useState<ProductionOrder[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
     const { toast } = useToast();
     const [productionToDelete, setProductionToDelete] = useState<string | null>(null);
 
@@ -99,8 +100,8 @@ export default function ProductionPage() {
             if (!res.ok) throw new Error("Failed to fetch production orders");
             const data: ProductionOrder[] = await res.json();
             
-            // Only keep PENDING and IN_PROGRESS
-            const activeProductions = data.filter(p => p.status === "PENDING" || p.status === "IN_PROGRESS");
+            // Only keep PENDING, IN_PROGRESS and COMPLETED
+            const activeProductions = data.filter(p => p.status === "PENDING" || p.status === "IN_PROGRESS" || p.status === "COMPLETED");
             setProductions(activeProductions);
             setFilteredProductions(activeProductions);
         } catch (error) {
@@ -184,6 +185,11 @@ export default function ProductionPage() {
 
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
+            setIsUpdatingStatus(id);
+            toast({
+                title: "กำลังอัปเดต...",
+                description: "รอสักครู่ ระบบกำลังอัปเดตสถานะการผลิต",
+            });
             const res = await fetch(`/api/production-orders/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -206,6 +212,8 @@ export default function ProductionPage() {
                 title: "Error",
                 description: error.message || "Could not update status",
             });
+        } finally {
+            setIsUpdatingStatus(null);
         }
     };
 
@@ -239,10 +247,14 @@ export default function ProductionPage() {
             : Number(prod.quantity || 0);
 
         // Standard Ingredients Calculation
-        const scalingFactor = totalQty / 78;
+        const scalingFactor = totalQty / 50;
         const ingredients = [
-            { name: "แป้ง", qty: (22.5 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) },
-            { name: "สีผสมอาหาร", qty: (3 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) },
+            { name: "แป้ง", qty: (14.42 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " กก." },
+            { name: "เกลือ", qty: (320.51 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
+            { name: "สารกันบูด", qty: (192.31 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
+            { name: "โซเดียมฯ", qty: (320.51 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
+            { name: "ถุง", qty: (50 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 0 }) + " ห่อ" },
+            { name: "น้ำมัน", qty: (0.96 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " ล." },
         ];
 
         const issueDate = prod.purchaseOrder?.issueDate ? new Date(prod.purchaseOrder.issueDate) : new Date(prod.createdAt);
@@ -284,9 +296,11 @@ export default function ProductionPage() {
                         <div className="flex flex-col items-end gap-1">
                             <div className={cn(
                                 "px-3 py-1 rounded-md text-xs font-bold border", 
-                                prod.status === "PENDING" ? "bg-yellow-100 text-yellow-700 border-yellow-200" : "bg-blue-100 text-blue-700 border-blue-200"
+                                prod.status === "PENDING" ? "bg-yellow-100 text-yellow-700 border-yellow-200" 
+                                : prod.status === "COMPLETED" ? "bg-green-100 text-green-700 border-green-200"
+                                : "bg-blue-100 text-blue-700 border-blue-200"
                             )}>
-                                {prod.status === "PENDING" ? "รอการผลิต" : "กำลังผลิต"}
+                                {prod.status === "PENDING" ? "รอการผลิต" : prod.status === "COMPLETED" ? "เสร็จสิ้น" : "กำลังผลิต"}
                             </div>
                         </div>
                     </div>
@@ -328,22 +342,32 @@ export default function ProductionPage() {
 
                 {/* ── CARD FOOTER / ACTIONS ── */}
                 <div className="bg-gray-50 p-3 flex flex-col gap-2 border-t border-gray-100">
-                    <Button 
-                        size="sm" 
-                        className={cn(
-                            "w-full h-9 font-bold shadow-sm transition-all active:scale-[0.98]",
-                            prod.status === "PENDING" 
-                                ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
-                                : "bg-blue-600 hover:bg-blue-700 text-white"
-                        )}
-                        onClick={() => handleUpdateStatus(prod.id, prod.status === "PENDING" ? "IN_PROGRESS" : "COMPLETED")}
-                    >
-                        {prod.status === "PENDING" ? (
-                            <><PlayCircle className="w-4 h-4 mr-2" /> เริ่มการผลิต</>
-                        ) : (
-                            <><RefreshCw className="w-4 h-4 mr-2" /> ผลิตเสร็จสิ้น</>
-                        )}
-                    </Button>
+                    {prod.status !== "COMPLETED" ? (
+                        <Button 
+                            size="sm" 
+                            className={cn(
+                                "w-full h-9 font-bold shadow-sm transition-all active:scale-[0.98]",
+                                prod.status === "PENDING" 
+                                    ? "bg-emerald-600 hover:bg-emerald-700 text-white" 
+                                    : "bg-blue-600 hover:bg-blue-700 text-white",
+                                isUpdatingStatus === prod.id ? "opacity-70 cursor-not-allowed" : ""
+                            )}
+                            onClick={() => handleUpdateStatus(prod.id, prod.status === "PENDING" ? "IN_PROGRESS" : "COMPLETED")}
+                            disabled={isUpdatingStatus === prod.id}
+                        >
+                            {isUpdatingStatus === prod.id ? (
+                                <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> กำลังอัปเดต...</>
+                            ) : prod.status === "PENDING" ? (
+                                <><PlayCircle className="w-4 h-4 mr-2" /> เริ่มการผลิต</>
+                            ) : (
+                                <><RefreshCw className="w-4 h-4 mr-2" /> ผลิตเสร็จสิ้น</>
+                            )}
+                        </Button>
+                    ) : (
+                        <div className="w-full h-9 bg-green-100 text-green-700 border border-green-200 flex items-center justify-center rounded-md text-xs font-bold shadow-sm uppercase tracking-wider">
+                            <CheckCircle className="w-4 h-4 mr-2" /> ดำเนินการเสร็จสิ้น
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-3 gap-2">
                         <Link href={`/production/${prod.id}/pdf`} className="w-full">
@@ -378,6 +402,7 @@ export default function ProductionPage() {
 
     const pendingList = filteredProductions.filter(p => p.status === "PENDING");
     const inProgressList = filteredProductions.filter(p => p.status === "IN_PROGRESS");
+    const completedList = filteredProductions.filter(p => p.status === "COMPLETED");
 
     return (
         <div className="min-h-screen bg-[var(--po-bg)] pb-20">
@@ -422,7 +447,7 @@ export default function ProductionPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
                     {/* ขาซ้าย: รอผลิต */}
                     <div className="space-y-4">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
@@ -460,6 +485,26 @@ export default function ProductionPage() {
                             </div>
                         ) : (
                             inProgressList.map(renderCard)
+                        )}
+                    </div>
+
+                    {/* ขาขวาสุด: เสร็จสิ้น */}
+                    <div className="space-y-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <h2 className="text-green-800 font-bold text-lg">เสร็จสิ้น (Completed)</h2>
+                            <span className="bg-green-200 text-green-800 text-xs font-bold px-2 py-1 rounded-full ml-auto">
+                                {completedList.length} รายการ
+                            </span>
+                        </div>
+                        {isLoading ? (
+                            <div className="text-center py-6 text-green-600 opacity-50"><RefreshCw className="animate-spin h-5 w-5 mx-auto" /></div>
+                        ) : completedList.length === 0 ? (
+                            <div className="text-center py-8 text-gray-400 bg-white rounded-lg border border-dashed border-gray-200 backdrop-blur-sm">
+                                ไม่มีรายการที่เสร็จสิ้น
+                            </div>
+                        ) : (
+                            completedList.map(renderCard)
                         )}
                     </div>
                 </div>

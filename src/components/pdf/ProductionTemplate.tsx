@@ -170,13 +170,14 @@ const ProductionPOTemplate = ({ data }: { data: ProductionData }) => {
     const grandTotal = subtotal + vatAmount;
 
     // Calculation formulas for ingredients
-    const scalingFactor = totalQty / 78;
+    const scalingFactor = totalQty / 50;
     const requirements = [
-        { name: "แป้ง (Flour)", amount: 22.5 * scalingFactor, unit: "กิโลกรัม" },
-        { name: "เกลือ (Salt)", amount: 0.5 * scalingFactor, unit: "กิโลกรัม" },
-        { name: "สารกันบูด (Preservative)", amount: 0.3 * scalingFactor, unit: "กิโลกรัม" },
-        { name: "น้ำมัน (Oil)", amount: 1.5 * scalingFactor, unit: "ลิตร" },
-        { name: "โซเดียมใบคาร์บอเนต (Sodium Bicarbonate)", amount: 0.5 * scalingFactor, unit: "กรัม" },
+        { name: "แป้ง (Flour)", amount: 14.42 * scalingFactor, unit: "กิโลกรัม" },
+        { name: "เกลือ (Salt)", amount: 320.51 * scalingFactor, unit: "กรัม" },
+        { name: "สารกันบูด (Preservative)", amount: 192.31 * scalingFactor, unit: "กรัม" },
+        { name: "โซเดียมใบคาร์บอเนต (Sodium Bicarbonate)", amount: 320.51 * scalingFactor, unit: "กรัม" },
+        { name: "ถุง (Bag)", amount: 50 * scalingFactor, unit: "ห่อ" },
+        { name: "น้ำมัน (Oil)", amount: 0.96 * scalingFactor, unit: "ลิตร" },
     ];
 
     const formatThaiDate = (value?: string | null) => {

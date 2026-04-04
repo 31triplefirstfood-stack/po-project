@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Factory, FileText, Package, Clock, CheckCircle, AlertTriangle, PlayCircle } from "lucide-react";
+import { ArrowLeft, Factory, FileText, Package, Clock, CheckCircle, AlertTriangle, PlayCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -74,6 +74,7 @@ export default function ProductionDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [status, setStatus] = useState("");
     const [problemNote, setProblemNote] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const fetchProduction = async () => {
         try {
@@ -103,6 +104,11 @@ export default function ProductionDetailPage() {
 
     const handleUpdateStatus = async () => {
         try {
+            setIsUpdating(true);
+            toast({
+                title: "กำลังบันทึก...",
+                description: "รอสักครู่ ระบบกำลังอัปเดตสถานะการผลิต",
+            });
             const res = await fetch(`/api/production-orders/${params.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -128,6 +134,8 @@ export default function ProductionDetailPage() {
                 title: "Error",
                 description: error.message || "Could not update production order",
             });
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -333,9 +341,10 @@ export default function ProductionDetailPage() {
 
                             <Button 
                                 onClick={handleUpdateStatus}
+                                disabled={isUpdating}
                                 className="w-full bg-emerald-600 hover:bg-emerald-700"
                             >
-                                บันทึกการเปลี่ยนแปลง
+                                {isUpdating ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> กำลังบันทึก...</> : "บันทึกการเปลี่ยนแปลง"}
                             </Button>
 
                             {production.startedAt && (

@@ -153,23 +153,21 @@ export default function StockPage() {
                     ) : stockItems.length === 0 ? (
                         <div className="text-center py-10 text-gray-400">ยังไม่มีข้อมูลวัตถุดิบ</div>
                     ) : stockItems.map((item) => {
-                        // Recipe Calculation (Same logic as in production page)
-                        const recipeIngredients = ["แป้ง", "เกลือ", "สารกันบูด", "น้ำมัน", "โซเดียมใบคาร์บอเนต", "โซเดียมไบคาร์บอเนต", "สีผสมอาหาร"];
+                        // Recipe Calculation (Based on 50 items)
+                        const recipeIngredients = ["แป้ง", "เกลือ", "สารกันบูด", "น้ำมัน", "โซเดียมใบคาร์บอเนต", "โซเดียมไบคาร์บอเนต"];
                         const isRecipeItem = recipeIngredients.some(ing => item.name.includes(ing));
                         let totalProducible: number | null = null;
                         
                         if (item.name.includes("แป้ง")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 22.5));
+                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 14.42));
                         } else if (item.name.includes("เกลือ")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 0.5));
+                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.32051));
                         } else if (item.name.includes("สารกันบูด")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 0.3));
+                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.19231));
                         } else if (item.name.includes("น้ำมัน")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 1.5));
+                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.96));
                         } else if (item.name.includes("โซเดียมใบคาร์บอเนต") || item.name.includes("โซเดียมไบคาร์บอเนต")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 0.5));
-                        } else if (item.name.includes("สีผสมอาหาร")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (78 / 3));
+                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.32051));
                         }
 
                         return (
@@ -194,23 +192,23 @@ export default function StockPage() {
                                             <p className="text-base font-medium text-gray-700">{getLastRestockInfo(item)}</p>
                                         </div>
 
-                                        <div className="flex gap-6 items-stretch lg:col-span-2">
-                                            <div className="bg-green-50 border border-green-100 rounded-2xl px-6 py-5 flex flex-col justify-center flex-1 transition-all hover:bg-green-100/50">
-                                                <p className="text-sm font-bold tracking-wide text-green-800 uppercase whitespace-nowrap">จำนวนคงเหลือ</p>
+                                        <div className="flex gap-4 items-stretch lg:col-span-2">
+                                            <div className="bg-green-50 border border-green-100 rounded-2xl px-5 py-5 flex flex-col justify-center flex-1 transition-all hover:bg-green-100/50 min-h-[100px]">
+                                                <p className="text-xs sm:text-sm font-bold tracking-wide text-green-800 uppercase whitespace-nowrap">จำนวนคงเหลือ</p>
                                                 <div className="flex items-baseline gap-2 mt-2">
-                                                    <p className="text-3xl font-black text-green-700">{Number(item.currentQty).toLocaleString()}</p>
-                                                    <p className="text-lg font-bold text-green-600/80">{item.unit}</p>
+                                                    <p className="text-2xl sm:text-3xl font-black text-green-700">{Number(item.currentQty).toLocaleString()}</p>
+                                                    <p className="text-sm sm:text-lg font-bold text-green-600/80">{item.unit}</p>
                                                 </div>
                                             </div>
                                             {isRecipeItem && totalProducible !== null && (
-                                                <div className="bg-blue-50 border border-blue-100 rounded-2xl px-6 py-5 flex flex-col justify-center flex-1 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)] transition-all hover:bg-blue-100/50">
-                                                    <p className="text-sm font-bold tracking-wide text-blue-800 uppercase flex items-center gap-2 whitespace-nowrap">
-                                                        <span className="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse"></span>
-                                                        จำนวนที่ผลิตได้จริง (ทั้งหมด)
+                                                <div className="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-5 flex flex-col justify-center flex-1 shadow-[inset_0_0_20px_rgba(59,130,246,0.05)] transition-all hover:bg-blue-100/50 min-h-[100px]">
+                                                    <p className="text-xs sm:text-sm font-bold tracking-wide text-blue-800 uppercase flex items-center gap-2 whitespace-nowrap">
+                                                        <span className="w-2 h-2 rounded-full bg-blue-500 inline-block animate-pulse shrink-0"></span>
+                                                        <span className="truncate">ผลิตได้จริงสูงสุด</span>
                                                     </p>
                                                     <div className="flex items-baseline gap-2 mt-2">
-                                                        <p className="text-3xl font-black text-blue-700">{totalProducible.toLocaleString()}</p>
-                                                        <p className="text-lg font-bold text-blue-600/80">ห่อ</p>
+                                                        <p className="text-2xl sm:text-3xl font-black text-blue-700">{totalProducible.toLocaleString()}</p>
+                                                        <p className="text-sm sm:text-lg font-bold text-blue-600/80">ห่อ</p>
                                                     </div>
                                                 </div>
                                             )}

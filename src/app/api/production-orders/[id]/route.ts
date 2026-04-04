@@ -76,14 +76,14 @@ export async function PUT(
 
             if (currentOrder && !currentOrder.stockDeducted) {
                 const qty = Number(currentOrder.quantity || 1);
-                const scalingFactor = qty / 78;
+                const scalingFactor = qty / 50;
 
                 const ingredients = [
-                    { name: "แป้ง", standardAmount: 22.5 },
-                    { name: "เกลือ", standardAmount: 0.5 },
-                    { name: "สารกันบูด", standardAmount: 0.3 },
-                    { name: "น้ำมัน", standardAmount: 1.5 },
-                    { name: "โซเดียมใบคาร์บอเนต", standardAmount: 0.5 },
+                    { name: "แป้ง", standardAmount: 14.42 },
+                    { name: "เกลือ", standardAmount: 0.32051 },
+                    { name: "สารกันบูด", standardAmount: 0.19231 },
+                    { name: "น้ำมัน", standardAmount: 0.96 },
+                    { name: "โซเดียมใบคาร์บอเนต", standardAmount: 0.32051 },
                 ];
 
                 const transactions: any[] = [];
