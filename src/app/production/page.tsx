@@ -100,8 +100,8 @@ export default function ProductionPage() {
             if (!res.ok) throw new Error("Failed to fetch production orders");
             const data: ProductionOrder[] = await res.json();
             
-            // Only keep PENDING, IN_PROGRESS and COMPLETED
-            const activeProductions = data.filter(p => p.status === "PENDING" || p.status === "IN_PROGRESS" || p.status === "COMPLETED");
+            // Only keep PENDING and IN_PROGRESS
+            const activeProductions = data.filter(p => p.status === "PENDING" || p.status === "IN_PROGRESS");
             setProductions(activeProductions);
             setFilteredProductions(activeProductions);
         } catch (error) {
@@ -402,7 +402,6 @@ export default function ProductionPage() {
 
     const pendingList = filteredProductions.filter(p => p.status === "PENDING");
     const inProgressList = filteredProductions.filter(p => p.status === "IN_PROGRESS");
-    const completedList = filteredProductions.filter(p => p.status === "COMPLETED");
 
     return (
         <div className="min-h-screen bg-[var(--po-bg)] pb-20">
@@ -447,7 +446,7 @@ export default function ProductionPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
                     {/* ขาซ้าย: รอผลิต */}
                     <div className="space-y-4">
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
@@ -488,25 +487,7 @@ export default function ProductionPage() {
                         )}
                     </div>
 
-                    {/* ขาขวาสุด: เสร็จสิ้น */}
-                    <div className="space-y-4">
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 shadow-sm">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <h2 className="text-green-800 font-bold text-lg">เสร็จสิ้น (Completed)</h2>
-                            <span className="bg-green-200 text-green-800 text-xs font-bold px-2 py-1 rounded-full ml-auto">
-                                {completedList.length} รายการ
-                            </span>
-                        </div>
-                        {isLoading ? (
-                            <div className="text-center py-6 text-green-600 opacity-50"><RefreshCw className="animate-spin h-5 w-5 mx-auto" /></div>
-                        ) : completedList.length === 0 ? (
-                            <div className="text-center py-8 text-gray-400 bg-white rounded-lg border border-dashed border-gray-200 backdrop-blur-sm">
-                                ไม่มีรายการที่เสร็จสิ้น
-                            </div>
-                        ) : (
-                            completedList.map(renderCard)
-                        )}
-                    </div>
+
                 </div>
             </div>
 
