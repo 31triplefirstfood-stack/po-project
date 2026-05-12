@@ -45,7 +45,13 @@ function CreatePurchaseOrderContent() {
             <div className="-mt-6">
                 <PurchaseOrderForm
                     initialData={initialData}
-                    onSuccess={() => router.push("/production")}
+                    onSuccess={() => {
+                        if (editId) {
+                            router.push("/purchase-orders");
+                        } else {
+                            window.location.href = "/purchase-orders/create";
+                        }
+                    }}
                     onCancel={() => router.push("/purchase-orders")}
                 />
             </div>
