@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Header from "@/components/Header";
 import NavTabs from "@/components/NavTabs";
-import { cn, formatPoNumber } from "@/lib/utils";
+import { cn, formatPoNumber, formatProdNumber } from "@/lib/utils";
 
 function DatePickerInput({ date, setDate }: { date: Date | undefined, setDate: (d: Date | undefined) => void }) {
     return <Input type="date" value={date ? format(date, "yyyy-MM-dd") : ""} onChange={(e) => setDate(e.target.value ? new Date(e.target.value) : undefined)} />;
@@ -232,15 +232,6 @@ export default function ProductionPage() {
         );
     };
 
-    const formatProdNumber = (id: string, dateStr: string) => {
-        const date = new Date(dateStr);
-        const beYear = date.getFullYear() + 543;
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        const suffix = id.slice(-3).toUpperCase();
-        return `PROD-${beYear}${mm}${dd}-${suffix}`;
-    };
-
     const renderCard = (prod: ProductionOrder) => {
         const totalQty = prod.purchaseOrder 
             ? prod.purchaseOrder.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
@@ -267,7 +258,7 @@ export default function ProductionPage() {
                     <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl -mr-4 -mt-4"></div>
                     <div className="relative z-10">
                         <div className="text-[10px] text-teal-100 uppercase tracking-wider font-semibold">เลขการผลิต</div>
-                        <div className="font-bold font-mono tracking-tight text-lg">{formatProdNumber(prod.id, prod.createdAt)}</div>
+                        <div className="font-bold font-mono tracking-tight text-lg">{formatProdNumber(prod.id, issueDate)}</div>
                     </div>
                     <div className="text-right relative z-10">
                         <div className="text-xl font-bold font-mono leading-none">{totalQty.toLocaleString()}</div>

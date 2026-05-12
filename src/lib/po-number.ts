@@ -2,28 +2,31 @@ import { db } from "@/lib/db";
 import { format } from "date-fns";
 
 /**
- * Generates the next PO number in the format PO-YYYYMM-XXX.
- * Uses a raw SQL query with FOR UPDATE SKIP LOCKED to prevent race conditions
- * when multiple users create POs simultaneously.
+ * Generates the next PO number in the format TAX{Year}-{Month}-B{Sequence}.
+ * Computes the max sequence number for the entire year so that
+ * the sequence number continues across months and resets yearly.
  *
  * Must be called inside a Prisma transaction.
  */
 export async function generatePoNumber(
-    tx: Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">
+    tx: Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
+    customDate?: Date
 ): Promise<string> {
-    const now = new Date();
-    const thaiYear = now.getFullYear() + 543;
-    const month = format(now, "MM");
-    const prefix = `TAX${thaiYear}-${month}-B`;
+    const referenceDate = customDate || new Date();
+    const thaiYear = referenceDate.getFullYear() + 543;
+    const month = format(referenceDate, "MM");
+    
+    // Prefix for searching all POs within the same year
+    const yearPrefix = `TAX${thaiYear}-`;
+    // Full prefix for the newly generated PO
+    const fullPrefix = `TAX${thaiYear}-${month}-B`;
 
-    const lastPo = await tx.purchaseOrder.findFirst({
+    // Fetch all PO numbers in the current year to find the highest sequence
+    const allPosThisYear = await tx.purchaseOrder.findMany({
         where: {
             poNumber: {
-                startsWith: prefix,
+                startsWith: yearPrefix,
             },
-        },
-        orderBy: {
-            poNumber: "desc",
         },
         select: {
             poNumber: true,
@@ -32,16 +35,19 @@ export async function generatePoNumber(
 
     let nextSequence = 1;
 
-    if (lastPo) {
-        const parts = lastPo.poNumber.split("-B");
-        if (parts.length === 2) {
-            const lastSequence = parseInt(parts[1], 10);
-            if (!isNaN(lastSequence)) {
-                nextSequence = lastSequence + 1;
+    if (allPosThisYear.length > 0) {
+        const sequences = allPosThisYear.map((po) => {
+            const parts = po.poNumber.split("-B");
+            if (parts.length === 2) {
+                const seq = parseInt(parts[1], 10);
+                return isNaN(seq) ? 0 : seq;
             }
-        }
+            return 0;
+        });
+        const maxSequence = Math.max(...sequences);
+        nextSequence = maxSequence + 1;
     }
 
     const sequence = String(nextSequence).padStart(3, "0");
-    return `${prefix}${sequence}`;
+    return `${fullPrefix}${sequence}`;
 }

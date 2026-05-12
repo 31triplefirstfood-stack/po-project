@@ -163,9 +163,22 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        await db.productionOrder.delete({
+        
+        const productionOrder = await db.productionOrder.findUnique({
             where: { id },
+            select: { purchaseOrderId: true }
         });
+
+        if (productionOrder?.purchaseOrderId) {
+            // Deleting the PurchaseOrder will cascade and delete the ProductionOrder
+            await db.purchaseOrder.delete({
+                where: { id: productionOrder.purchaseOrderId }
+            });
+        } else {
+            await db.productionOrder.delete({
+                where: { id },
+            });
+        }
 
         return NextResponse.json({ message: "Production order deleted successfully" });
     } catch (error) {

@@ -130,8 +130,8 @@ export async function POST(request: NextRequest) {
 
         // ── Create PO inside a transaction with PO number lock ──────────────────
         const purchaseOrder = await db.$transaction(async (tx) => {
-            // Generate PO number safely inside the transaction
-            const poNumber = await generatePoNumber(tx);
+            // Generate PO number safely inside the transaction using the issue date
+            const poNumber = await generatePoNumber(tx, new Date(issueDate));
 
             // Verify supplier and user exist
             const [supplier, user] = await Promise.all([

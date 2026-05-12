@@ -401,7 +401,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
             if (onSuccess) {
                 onSuccess();
             } else {
-                window.location.href = "/purchase-orders";
+                window.location.href = "/production";
             }
 
         } catch (error: any) {

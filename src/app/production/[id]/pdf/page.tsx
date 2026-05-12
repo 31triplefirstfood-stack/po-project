@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import ProductionPOTemplate from "@/components/pdf/ProductionTemplate";
+import { formatProdNumber } from "@/lib/utils";
 
 // Same interface as GET /api/production-orders/[id]
 interface ProductionOrder {
@@ -18,6 +19,7 @@ interface ProductionOrder {
     customerName: string | null;
     purchaseOrder?: {
         poNumber: string;
+        issueDate: string;
         deliveryDate: string;
         supplier: {
             companyName: string;
@@ -152,7 +154,7 @@ export default function ProductionPdfPage() {
                     </Button>
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-gray-800">
-                            เอกสารสั่งผลิต: {production.id}
+                            เอกสารสั่งผลิต: {formatProdNumber(production.id, production.purchaseOrder?.issueDate || production.createdAt)}
                         </h1>
                     </div>
                 </div>

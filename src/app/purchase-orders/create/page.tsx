@@ -45,7 +45,7 @@ function CreatePurchaseOrderContent() {
             <div className="-mt-6">
                 <PurchaseOrderForm
                     initialData={initialData}
-                    onSuccess={() => router.push("/purchase-orders")}
+                    onSuccess={() => router.push("/production")}
                     onCancel={() => router.push("/purchase-orders")}
                 />
             </div>

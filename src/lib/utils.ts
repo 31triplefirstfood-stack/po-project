@@ -15,3 +15,13 @@ export function formatPoNumber(poNumber: string) {
 
   return poNumber
 }
+
+export function formatProdNumber(id: string, date: Date | string) {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const beYear = d.getFullYear() + 543;
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const suffix = id.slice(-3).toUpperCase();
+  return `PROD-${beYear}${mm}${dd}-${suffix}`;
+}
+
