@@ -16,16 +16,16 @@ export async function generatePoNumber(
     const thaiYear = referenceDate.getFullYear() + 543;
     const month = format(referenceDate, "MM");
     
-    // Prefix for searching all POs within the same year
-    const yearPrefix = `TAX${thaiYear}-`;
+    // Prefix for searching all POs within the same month of the same year
+    const monthPrefix = `TAX${thaiYear}-${month}-`;
     // Full prefix for the newly generated PO
     const fullPrefix = `TAX${thaiYear}-${month}-B`;
 
-    // Fetch all PO numbers in the current year to find the highest sequence
-    const allPosThisYear = await tx.purchaseOrder.findMany({
+    // Fetch all PO numbers in the current month to find the highest sequence
+    const allPosThisMonth = await tx.purchaseOrder.findMany({
         where: {
             poNumber: {
-                startsWith: yearPrefix,
+                startsWith: monthPrefix,
             },
         },
         select: {
@@ -35,8 +35,8 @@ export async function generatePoNumber(
 
     let nextSequence = 1;
 
-    if (allPosThisYear.length > 0) {
-        const sequences = allPosThisYear.map((po) => {
+    if (allPosThisMonth.length > 0) {
+        const sequences = allPosThisMonth.map((po) => {
             const parts = po.poNumber.split("-B");
             if (parts.length === 2) {
                 const seq = parseInt(parts[1], 10);
