@@ -302,7 +302,7 @@ export default function ProductionPage() {
                                 <span className="text-gray-400 text-[10px] font-bold uppercase block mb-1">ตัวอย่างรายการ</span>
                                 <div className="text-xs text-gray-600 space-y-1 bg-gray-50 p-2 rounded-md">
                                     {prod.purchaseOrder ? (
-                                        prod.purchaseOrder.items.slice(0, 2).map((item, idx) => (
+                                        prod.purchaseOrder.items.map((item, idx) => (
                                             <div key={idx} className="flex justify-between items-center px-1">
                                                 <span className="truncate max-w-[70%]">- {item.product?.name || item.itemName}</span>
                                                 <span className="font-mono text-gray-500">x{Number(item.quantity).toLocaleString()}</span>
