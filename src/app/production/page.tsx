@@ -65,6 +65,7 @@ interface ProductionOrder {
 export default function ProductionPage() {
     const [productions, setProductions] = useState<ProductionOrder[]>([]);
     const [filteredProductions, setFilteredProductions] = useState<ProductionOrder[]>([]);
+    const [stockItems, setStockItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
     const { toast } = useToast();
@@ -96,10 +97,16 @@ export default function ProductionPage() {
     const fetchProductions = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch("/api/production-orders");
-            if (!res.ok) throw new Error("Failed to fetch production orders");
-            const data: ProductionOrder[] = await res.json();
+            const [prodRes, stockRes] = await Promise.all([
+                fetch("/api/production-orders"),
+                fetch("/api/stock")
+            ]);
             
+            if (!prodRes.ok || !stockRes.ok) throw new Error("Failed to fetch data");
+            const data: ProductionOrder[] = await prodRes.json();
+            const stocks = await stockRes.json();
+            
+            setStockItems(stocks);
             // Only keep PENDING and IN_PROGRESS
             const activeProductions = data.filter(p => p.status === "PENDING" || p.status === "IN_PROGRESS");
             setProductions(activeProductions);
@@ -108,7 +115,7 @@ export default function ProductionPage() {
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: "Could not load production orders.",
+                description: "Could not load production orders or stock data.",
             });
         } finally {
             setIsLoading(false);
@@ -237,16 +244,53 @@ export default function ProductionPage() {
             ? prod.purchaseOrder.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
             : Number(prod.quantity || 0);
 
-        // Standard Ingredients Calculation
-        const scalingFactor = totalQty / 50;
-        const ingredients = [
-            { name: "แป้ง", qty: (14.42 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " กก." },
-            { name: "เกลือ", qty: (320.51 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
-            { name: "สารกันบูด", qty: (192.31 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
-            { name: "โซเดียมฯ", qty: (320.51 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก." },
-            { name: "ถุง", qty: (50 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 0 }) + " ห่อ" },
-            { name: "น้ำมัน", qty: (0.96 * scalingFactor).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " ล." },
-        ];
+        // Dynamic Recipe Calculation based on stockItems and order contents
+        const orderItemNames: string[] = [];
+        if (prod.purchaseOrder) {
+            prod.purchaseOrder.items.forEach(item => {
+                orderItemNames.push((item.product?.name || item.itemName || "").toLowerCase());
+            });
+        } else {
+            orderItemNames.push((prod.productName || "เส้น 50 กิโล").toLowerCase());
+        }
+
+        const hasYellow = orderItemNames.some(name => name.includes("บะหมี่ลวกเส้น") || name.includes("ข้าวซอยลวกเส้นสด"));
+        const hasGreen = orderItemNames.some(name => name.includes("หยกเส้นลวก"));
+
+        const ingredients = stockItems
+            .filter(item => Number(item.recipeQty) > 0)
+            .filter(item => {
+                const name = item.name.toLowerCase();
+                if (name.includes("สีเหลือง")) return hasYellow;
+                if (name.includes("สีเขียว")) return hasGreen;
+                return true;
+            })
+            .map(item => {
+                const qtyVal = Number(item.recipeQty) * totalQty;
+                let displayQty = "";
+                let displayName = item.name;
+
+                // Friendly display formatting
+                if (item.name.includes("แป้ง") && item.unit === "ถุง") {
+                    const qtyInKg = qtyVal * 25;
+                    displayQty = qtyInKg.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " กก.";
+                } else if (item.unit === "กิโลกรัม" && qtyVal < 1) {
+                    displayQty = (qtyVal * 1000).toLocaleString(undefined, { maximumFractionDigits: 1 }) + " ก.";
+                } else if (item.unit === "กิโลกรัม") {
+                    displayQty = qtyVal.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " กก.";
+                } else if (item.unit === "ลิตร") {
+                    displayQty = qtyVal.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " ล.";
+                } else {
+                    displayQty = qtyVal.toLocaleString(undefined, { maximumFractionDigits: 1 }) + " " + item.unit;
+                }
+
+                // Shorten name if needed for layout space
+                if (displayName.includes("โซเดียมไบคาร์บอเนต")) displayName = "โซเดียมฯ";
+                else if (displayName.includes("สีผสมอาหาร สีเหลือง")) displayName = "สีผสมอาหารสีเหลือง";
+                else if (displayName.includes("สีผสมอาหาร สีเขียว")) displayName = "สีผสมอาหารสีเขียว";
+
+                return { name: displayName, qty: displayQty };
+            });
 
         const issueDate = prod.purchaseOrder?.issueDate ? new Date(prod.purchaseOrder.issueDate) : new Date(prod.createdAt);
         const deliveryDate = prod.purchaseOrder?.deliveryDate ? new Date(prod.purchaseOrder.deliveryDate) : new Date(prod.createdAt);

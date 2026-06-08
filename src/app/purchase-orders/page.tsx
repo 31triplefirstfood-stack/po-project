@@ -193,6 +193,12 @@ export default function PurchaseOrdersPage() {
                         <FileSpreadsheet className="w-5 h-5" />
                         <span className="font-bold text-center sm:text-left">รายการ PO ทั้งหมด (All PO List)</span>
                     </div>
+                    <Link href="/purchase-orders/reports">
+                        <Button className="bg-white text-purple-700 hover:bg-purple-50 font-bold border border-transparent shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
+                            <FileSpreadsheet className="w-4 h-4 text-purple-600" />
+                            รายงานสรุปยอดสั่งซื้อ (PDF)
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* ── Filters ── */}

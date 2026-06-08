@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardMinus, FileText, Package, Plus, Receipt, Trash2, Warehouse } from "lucide-react";
+import { ClipboardMinus, FileText, Package, Plus, Receipt, Trash2, Warehouse, ArrowUp, ArrowDown, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -18,6 +18,8 @@ interface StockItem {
     imageUrl: string | null;
     unit: string;
     currentQty: number;
+    recipeQty: number;
+    sortOrder: number;
     createdAt: string;
     updatedAt: string;
     restocks: any[];
@@ -36,6 +38,29 @@ export default function StockPage() {
     const [editingItem, setEditingItem] = useState<StockItem | undefined>(undefined);
     const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
     const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
+
+    const handleReorder = async (id: string, direction: "up" | "down") => {
+        try {
+            const res = await fetch("/api/stock/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, direction })
+            });
+
+            if (!res.ok) {
+                const json = await res.json();
+                throw new Error(json.error || "Failed to reorder");
+            }
+
+            fetchStockItems();
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "เกิดข้อผิดพลาด",
+                description: error.message,
+            });
+        }
+    };
 
     const fetchStockItems = async () => {
         try {
@@ -153,21 +178,12 @@ export default function StockPage() {
                     ) : stockItems.length === 0 ? (
                         <div className="text-center py-10 text-gray-400">ยังไม่มีข้อมูลวัตถุดิบ</div>
                     ) : stockItems.map((item) => {
-                        // Recipe Calculation (Based on 50 items)
-                        const recipeIngredients = ["แป้ง", "เกลือ", "สารกันบูด", "น้ำมัน", "โซเดียมใบคาร์บอเนต", "โซเดียมไบคาร์บอเนต"];
-                        const isRecipeItem = recipeIngredients.some(ing => item.name.includes(ing));
+                        // Recipe Calculation based on database recipeQty
+                        const isRecipeItem = Number(item.recipeQty) > 0;
                         let totalProducible: number | null = null;
                         
-                        if (item.name.includes("แป้ง")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 14.42));
-                        } else if (item.name.includes("เกลือ")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.32051));
-                        } else if (item.name.includes("สารกันบูด")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.19231));
-                        } else if (item.name.includes("น้ำมัน")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.96));
-                        } else if (item.name.includes("โซเดียมใบคาร์บอเนต") || item.name.includes("โซเดียมไบคาร์บอเนต")) {
-                            totalProducible = Math.floor(Number(item.currentQty) * (50 / 0.32051));
+                        if (isRecipeItem) {
+                            totalProducible = Math.floor(Number(item.currentQty) / Number(item.recipeQty));
                         }
 
                         return (
@@ -185,6 +201,11 @@ export default function StockPage() {
                                         <div className="space-y-2">
                                             <p className="text-xs font-semibold tracking-wide text-blue-600 uppercase">ชื่อวัตถุดิบ</p>
                                             <h3 className="text-xl font-bold text-gray-800 break-words">{item.name}</h3>
+                                            {isRecipeItem && (
+                                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 mt-1">
+                                                    สูตรการผลิต: {Number(item.recipeQty).toLocaleString()} {item.unit} / ห่อ
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="space-y-2">
@@ -216,13 +237,50 @@ export default function StockPage() {
                                     </div>
                                 </div>
                                 
-                                <button
-                                    type="button"
-                                    className="w-full sm:w-16 flex items-center justify-center bg-white hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors sm:border-l border-t sm:border-t-0 border-gray-100 shrink-0 p-4 sm:p-0"
-                                    onClick={() => handleDeleteItem(item)}
-                                >
-                                    <Trash2 className="h-6 w-6" />
-                                </button>
+                               <div className="w-full sm:w-16 flex sm:flex-col items-stretch bg-gray-50 border-t sm:border-t-0 sm:border-l border-gray-100 shrink-0">
+                                   {/* Edit Button */}
+                                   <button
+                                       type="button"
+                                       className="flex-1 flex items-center justify-center bg-white hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
+                                       onClick={() => {
+                                           setEditingItem(item);
+                                           setIsModalOpen(true);
+                                       }}
+                                       title="แก้ไขวัตถุดิบ"
+                                   >
+                                       <Edit className="h-5 w-5" />
+                                   </button>
+
+                                   {/* Reorder Up Button */}
+                                   <button
+                                       type="button"
+                                       className="flex-1 flex items-center justify-center bg-white hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
+                                       onClick={() => handleReorder(item.id, "up")}
+                                       title="เลื่อนขึ้น"
+                                   >
+                                       <ArrowUp className="h-5 w-5" />
+                                   </button>
+
+                                   {/* Reorder Down Button */}
+                                   <button
+                                       type="button"
+                                       className="flex-1 flex items-center justify-center bg-white hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
+                                       onClick={() => handleReorder(item.id, "down")}
+                                       title="เลื่อนลง"
+                                   >
+                                       <ArrowDown className="h-5 w-5" />
+                                   </button>
+
+                                   {/* Delete Button */}
+                                   <button
+                                       type="button"
+                                       className="flex-1 flex items-center justify-center bg-white hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors p-4"
+                                       onClick={() => handleDeleteItem(item)}
+                                       title="ลบวัตถุดิบ"
+                                   >
+                                       <Trash2 className="h-5 w-5" />
+                                   </button>
+                               </div>
                             </div>
                         );
                     })}

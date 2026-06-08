@@ -84,6 +84,7 @@ interface RestockReportItem {
     id: string;
     receiptNumber: string;
     quantity: number;
+    price: number | null;
     date: string;
     stockItem: {
         name: string;
@@ -107,30 +108,34 @@ export default function StockRestockReportTemplate({ items }: StockRestockReport
 
                 <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
-                        <View style={[styles.cell, { width: "24%" }]}><Text style={styles.bold}>ชื่อวัตถุดิบ   </Text></View>
-                        <View style={[styles.cell, { width: "22%" }]}><Text style={styles.bold}>เลขใบเสร็จ   </Text></View>
-                        <View style={[styles.cell, { width: "16%" }]}><Text style={styles.bold}>วันที่   </Text></View>
+                        <View style={[styles.cell, { width: "20%" }]}><Text style={styles.bold}>ชื่อวัตถุดิบ   </Text></View>
+                        <View style={[styles.cell, { width: "16%" }]}><Text style={styles.bold}>เลขใบเสร็จ   </Text></View>
+                        <View style={[styles.cell, { width: "14%" }]}><Text style={styles.bold}>วันที่   </Text></View>
                         <View style={[styles.cell, { width: "12%" }]}><Text style={styles.bold}>จำนวน   </Text></View>
-                        <View style={[styles.cell, { width: "10%" }]}><Text style={styles.bold}>หน่วย   </Text></View>
+                        <View style={[styles.cell, { width: "8%" }]}><Text style={styles.bold}>หน่วย   </Text></View>
+                        <View style={[styles.cell, { width: "14%" }]}><Text style={styles.bold}>ราคาที่ซื้อ (บาท)</Text></View>
                         <View style={[styles.cell, styles.lastCell, { width: "16%" }]}><Text style={styles.bold}>คงเหลือปัจจุบัน</Text></View>
                     </View>
 
                     {items.map((item) => (
                         <View key={item.id} style={styles.row}>
-                            <View style={[styles.cell, { width: "24%" }]}>
+                            <View style={[styles.cell, { width: "20%" }]}>
                                 <Text>{item.stockItem.name}   </Text>
                             </View>
-                            <View style={[styles.cell, { width: "22%" }]}>
+                            <View style={[styles.cell, { width: "16%" }]}>
                                 <Text>{item.receiptNumber}   </Text>
                             </View>
-                            <View style={[styles.cell, { width: "16%" }]}>
-                                <Text>{new Date(item.date).toLocaleDateString("th-TH")}   </Text>
+                            <View style={[styles.cell, { width: "14%" }]}>
+                                <Text>{item.date && item.date !== new Date(0).toISOString() ? new Date(item.date).toLocaleDateString("th-TH") : "-"}   </Text>
                             </View>
                             <View style={[styles.cell, { width: "12%" }]}>
                                 <Text>{Number(item.quantity).toLocaleString()}   </Text>
                             </View>
-                            <View style={[styles.cell, { width: "10%" }]}>
+                            <View style={[styles.cell, { width: "8%" }]}>
                                 <Text>{item.stockItem.unit}   </Text>
+                            </View>
+                            <View style={[styles.cell, { width: "14%" }]}>
+                                <Text>{item.price !== null && Number(item.price) > 0 ? `฿${Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "-"}   </Text>
                             </View>
                             <View style={[styles.cell, styles.lastCell, { width: "16%" }]}>
                                 <Text>{Number(item.stockItem.currentQty).toLocaleString()} {item.stockItem.unit}   </Text>

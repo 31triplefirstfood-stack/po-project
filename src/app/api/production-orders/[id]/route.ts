@@ -66,56 +66,79 @@ export async function PUT(
             updateData.startedAt = new Date();
         }
 
-        if (validated.data.status === "COMPLETED") {
-            if (!updateData.completedAt) updateData.completedAt = new Date();
+        if (validated.data.status === "COMPLETED" && !updateData.completedAt) {
+            updateData.completedAt = new Date();
+        }
 
+        if (validated.data.status === "IN_PROGRESS" || validated.data.status === "COMPLETED") {
             const currentOrder = await db.productionOrder.findUnique({
                 where: { id },
-                select: { stockDeducted: true, quantity: true }
+                include: {
+                    purchaseOrder: {
+                        include: {
+                            items: {
+                                include: {
+                                    product: true,
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
             if (currentOrder && !currentOrder.stockDeducted) {
-                const qty = Number(currentOrder.quantity || 1);
-                const scalingFactor = qty / 50;
+                let qty = 1;
+                const orderItemNames: string[] = [];
 
-                const ingredients = [
-                    { name: "แป้ง", standardAmount: 14.42 },
-                    { name: "เกลือ", standardAmount: 0.32051 },
-                    { name: "สารกันบูด", standardAmount: 0.19231 },
-                    { name: "น้ำมัน", standardAmount: 0.96 },
-                    { name: "โซเดียมใบคาร์บอเนต", standardAmount: 0.32051 },
-                ];
+                if (currentOrder.purchaseOrder) {
+                    qty = currentOrder.purchaseOrder.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+                    currentOrder.purchaseOrder.items.forEach(item => {
+                        orderItemNames.push((item.product?.name || item.itemName || "").toLowerCase());
+                    });
+                } else {
+                    qty = Number(currentOrder.quantity || 1);
+                    orderItemNames.push((currentOrder.productName || "").toLowerCase());
+                }
+
+                const hasYellow = orderItemNames.some(name => name.includes("บะหมี่ลวกเส้น") || name.includes("ข้าวซอยลวกเส้นสด"));
+                const hasGreen = orderItemNames.some(name => name.includes("หยกเส้นลวก"));
+
+                // Fetch recipe items dynamically
+                const stockItems = await db.stockItem.findMany({
+                    where: {
+                        recipeQty: { gt: 0 }
+                    }
+                });
 
                 const transactions: any[] = [];
-                const foundIngredients: string[] = [];
 
-                for (const ing of ingredients) {
-                    const item = await db.stockItem.findFirst({
-                        where: { name: { contains: ing.name, mode: "insensitive" } }
-                    });
+                for (const item of stockItems) {
+                    const name = item.name.toLowerCase();
+                    if (name.includes("สีเหลือง") && !hasYellow) continue;
+                    if (name.includes("สีเขียว") && !hasGreen) continue;
 
-                    if (item) {
-                        const usageAmount = ing.standardAmount * scalingFactor;
-                        transactions.push(
-                            db.stockUsage.create({
-                                data: {
-                                    stockItemId: item.id,
-                                    quantity: new Prisma.Decimal(usageAmount),
-                                    date: new Date(),
-                                    checkerName: "ระบบ (อัตโนมัติ)",
-                                }
-                            })
-                        );
-                        transactions.push(
-                            db.stockItem.update({
-                                where: { id: item.id },
-                                data: {
-                                    currentQty: { decrement: new Prisma.Decimal(usageAmount) }
-                                }
-                            })
-                        );
-                        foundIngredients.push(ing.name);
-                    }
+                    const usageAmount = Number(item.recipeQty) * qty;
+
+                    transactions.push(
+                        db.stockUsage.create({
+                            data: {
+                                stockItemId: item.id,
+                                quantity: new Prisma.Decimal(usageAmount),
+                                date: new Date(),
+                                checkerName: "ระบบ (อัตโนมัติ)",
+                                note: `ตัดสต็อกอัตโนมัติสำหรับการผลิต ${currentOrder.id}`
+                            }
+                        })
+                    );
+
+                    transactions.push(
+                        db.stockItem.update({
+                            where: { id: item.id },
+                            data: {
+                                currentQty: { decrement: new Prisma.Decimal(usageAmount) }
+                            }
+                        })
+                    );
                 }
 
                 if (transactions.length > 0) {

@@ -146,6 +146,8 @@ model StockItem {
   imageUrl   String?  @map("image_url")
   unit       String
   currentQty Decimal  @default(0) @map("current_qty") @db.Decimal(19, 8)
+  recipeQty  Decimal  @default(0) @map("recipe_qty") @db.Decimal(19, 8)
+  sortOrder  Int      @default(0) @map("sort_order")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -160,6 +162,7 @@ model StockRestock {
   stockItemId   String   @map("stock_item_id")
   receiptNumber String   @map("receipt_number")
   quantity      Decimal  @db.Decimal(19, 8)
+  price         Decimal? @default(0) @db.Decimal(19, 8)
   date          DateTime
   createdAt     DateTime @default(now()) @map("created_at")
 

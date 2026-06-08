@@ -18,6 +18,7 @@ interface RestockReportItem {
     id: string;
     receiptNumber: string;
     quantity: number;
+    price: number | null;
     date: string;
     stockItem: {
         name: string;
@@ -41,6 +42,27 @@ export default function StockRestockReportPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [viewMode, setViewMode] = useState<"latest" | "all">("latest");
     const [selectedItemName, setSelectedItemName] = useState<string>("all");
+    const [filterMonth, setFilterMonth] = useState<string>("all");
+    const [filterYear, setFilterYear] = useState<string>("all");
+    const [sortBy, setSortBy] = useState<string>("date-desc");
+
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 6 }, (_, i) => String(currentYear - i));
+
+    const monthOptions = [
+        { value: "1", label: "มกราคม (Jan)" },
+        { value: "2", label: "กุมภาพันธ์ (Feb)" },
+        { value: "3", label: "มีนาคม (Mar)" },
+        { value: "4", label: "เมษายน (Apr)" },
+        { value: "5", label: "พฤษภาคม (May)" },
+        { value: "6", label: "มิถุนายน (Jun)" },
+        { value: "7", label: "กรกฎาคม (Jul)" },
+        { value: "8", label: "สิงหาคม (Aug)" },
+        { value: "9", label: "กันยายน (Sep)" },
+        { value: "10", label: "ตุลาคม (Oct)" },
+        { value: "11", label: "พฤศจิกายน (Nov)" },
+        { value: "12", label: "ธันวาคม (Dec)" },
+    ];
 
     const uniqueItemNames = useMemo(() => {
         return stockItems.map(i => i.name).sort();
@@ -79,32 +101,55 @@ export default function StockRestockReportPage() {
     }, []);
 
     const displayData = useMemo(() => {
+        let filtered = items;
+
+        // Apply Item Name filter
+        if (selectedItemName !== "all") {
+            filtered = filtered.filter(i => i.stockItem.name === selectedItemName);
+        }
+
+        // Apply Month & Year filter
+        if (filterYear !== "all") {
+            filtered = filtered.filter(i => new Date(i.date).getFullYear() === Number(filterYear));
+        }
+        if (filterMonth !== "all") {
+            filtered = filtered.filter(i => (new Date(i.date).getMonth() + 1) === Number(filterMonth));
+        }
+
         if (viewMode === "all") {
-            let filtered = items;
-            if (selectedItemName !== "all") {
-                filtered = items.filter(i => i.stockItem.name === selectedItemName);
-            }
-            return [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            // Sort according to sortBy selector
+            return [...filtered].sort((a, b) => {
+                if (sortBy === "date-desc") return new Date(b.date).getTime() - new Date(a.date).getTime();
+                if (sortBy === "date-asc") return new Date(a.date).getTime() - new Date(b.date).getTime();
+                if (sortBy === "name-asc") return a.stockItem.name.localeCompare(b.stockItem.name);
+                if (sortBy === "name-desc") return b.stockItem.name.localeCompare(a.stockItem.name);
+                if (sortBy === "price-desc") return Number(b.price || 0) - Number(a.price || 0);
+                if (sortBy === "price-asc") return Number(a.price || 0) - Number(b.price || 0);
+                if (sortBy === "qty-desc") return Number(b.quantity) - Number(a.quantity);
+                if (sortBy === "qty-asc") return Number(a.quantity) - Number(b.quantity);
+                return 0;
+            });
         } else {
-            // Latest mode: Show all materials from stockItems
-            let filteredItems = stockItems;
+            // Latest mode: Show the latest restock record for each stock item for the selected period
+            let filteredStockItems = stockItems;
             if (selectedItemName !== "all") {
-                filteredItems = stockItems.filter(i => i.name === selectedItemName);
+                filteredStockItems = stockItems.filter(i => i.name === selectedItemName);
             }
 
-            return filteredItems.map(si => {
-                const latestFromHistory = items.find(i => i.stockItem.name === si.name);
+            const latestItems = filteredStockItems.map(si => {
+                const itemHistory = filtered.filter(i => i.stockItem.name === si.name);
+                const latestFromHistory = itemHistory.length > 0 ? itemHistory[0] : null;
                 
-                // If it exists in history, it should be the newest one because items is sorted by date desc
                 if (latestFromHistory) {
                     return latestFromHistory;
                 }
 
-                // If not in history, create a placeholder
+                // Placeholder if no restocks found in this period
                 return {
                     id: `placeholder-${si.id}`,
                     receiptNumber: "-",
                     quantity: 0,
+                    price: 0,
                     date: new Date(0).toISOString(),
                     stockItem: {
                         name: si.name,
@@ -112,9 +157,22 @@ export default function StockRestockReportPage() {
                         currentQty: si.currentQty
                     }
                 } as RestockReportItem;
-            }).sort((a, b) => a.stockItem.name.localeCompare(b.stockItem.name));
+            });
+
+            // Sort latestItems
+            return latestItems.sort((a, b) => {
+                if (sortBy === "name-asc") return a.stockItem.name.localeCompare(b.stockItem.name);
+                if (sortBy === "name-desc") return b.stockItem.name.localeCompare(a.stockItem.name);
+                if (sortBy === "date-desc") return new Date(b.date).getTime() - new Date(a.date).getTime();
+                if (sortBy === "date-asc") return new Date(a.date).getTime() - new Date(b.date).getTime();
+                if (sortBy === "price-desc") return Number(b.price || 0) - Number(a.price || 0);
+                if (sortBy === "price-asc") return Number(a.price || 0) - Number(b.price || 0);
+                if (sortBy === "qty-desc") return Number(b.quantity) - Number(a.quantity);
+                if (sortBy === "qty-asc") return Number(a.quantity) - Number(b.quantity);
+                return 0;
+            });
         }
-    }, [items, stockItems, viewMode, selectedItemName]);
+    }, [items, stockItems, viewMode, selectedItemName, filterMonth, filterYear, sortBy]);
 
     if (isLoading) {
         return (
@@ -126,39 +184,87 @@ export default function StockRestockReportPage() {
 
     return (
         <div className="flex flex-col h-[100dvh] w-full bg-white">
-            <div className="p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50">
-                <div className="flex items-center gap-4">
+            <div className="p-4 border-b flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 bg-gray-50">
+                <div className="flex items-center gap-4 shrink-0">
                     <Button variant="outline" onClick={() => router.push('/stock')}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> ย้อนกลับ
                     </Button>
                     <div className="font-bold text-lg text-gray-800">รายงานประวัติการเติมสต็อก</div>
                 </div>
                 
-                <div className="flex bg-white p-1 rounded-lg border border-gray-200">
-                    <Select value={selectedItemName} onValueChange={setSelectedItemName}>
-                        <SelectTrigger className="w-full sm:w-[180px] bg-white border-0 shadow-none focus:ring-0 mr-2 border-r rounded-none">
-                            <SelectValue placeholder="ทุกวัตถุดิบ" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white">
-                            <SelectItem value="all">ทุกวัตถุดิบ</SelectItem>
-                            {uniqueItemNames.map(name => (
-                                <SelectItem key={name} value={name}>{name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center bg-white p-1 rounded-lg border border-gray-200">
+                        <Select value={selectedItemName} onValueChange={setSelectedItemName}>
+                            <SelectTrigger className="w-full sm:w-[150px] bg-white border-0 shadow-none focus:ring-0 mr-2 border-r rounded-none text-xs">
+                                <SelectValue placeholder="ทุกวัตถุดิบ" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                                <SelectItem value="all">ทุกวัตถุดิบ</SelectItem>
+                                {uniqueItemNames.map(name => (
+                                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
 
-                    <button 
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'latest' ? 'bg-blue-50 shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
-                        onClick={() => setViewMode('latest')}
-                    >
-                        ดูล่าสุดของแต่ละวัตถุดิบ
-                    </button>
-                    <button 
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${viewMode === 'all' ? 'bg-blue-50 shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
-                        onClick={() => setViewMode('all')}
-                    >
-                        ดูประวัติแยกทั้งหมด
-                    </button>
+                        <button 
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'latest' ? 'bg-blue-50 shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                            onClick={() => setViewMode('latest')}
+                        >
+                            ดูล่าสุดของวัตถุดิบ
+                        </button>
+                        <button 
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'all' ? 'bg-blue-50 shadow-sm text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                            onClick={() => setViewMode('all')}
+                        >
+                            ดูประวัติทั้งหมด
+                        </button>
+                    </div>
+
+                    <div className="flex bg-white px-2 py-1 rounded-lg border border-gray-200 gap-2 items-center text-xs">
+                        <span className="text-gray-400 font-semibold">เดือน/ปี:</span>
+                        <Select value={filterMonth} onValueChange={setFilterMonth}>
+                            <SelectTrigger className="border-0 bg-transparent h-8 shadow-none focus:ring-0 w-24 text-xs">
+                                <SelectValue placeholder="ทุกเดือน" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">ทุกเดือน</SelectItem>
+                                {monthOptions.map(m => (
+                                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        <Select value={filterYear} onValueChange={setFilterYear}>
+                            <SelectTrigger className="border-0 bg-transparent h-8 shadow-none focus:ring-0 w-24 text-xs">
+                                <SelectValue placeholder="ทุกปี" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">ทุกปี</SelectItem>
+                                {yearOptions.map(y => (
+                                    <SelectItem key={y} value={y}>{y}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="flex bg-white px-2 py-1 rounded-lg border border-gray-200 gap-2 items-center text-xs">
+                        <span className="text-gray-400 font-semibold">จัดเรียง:</span>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="border-0 bg-transparent h-8 shadow-none focus:ring-0 w-32 text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="date-desc">วันที่ (ล่าสุด-เก่าสุด)</SelectItem>
+                                <SelectItem value="date-asc">วันที่ (เก่าสุด-ล่าสุด)</SelectItem>
+                                <SelectItem value="name-asc">ชื่อ (ก-ฮ)</SelectItem>
+                                <SelectItem value="name-desc">ชื่อ (ฮ-ก)</SelectItem>
+                                <SelectItem value="price-desc">ราคา (มาก-น้อย)</SelectItem>
+                                <SelectItem value="price-asc">ราคา (น้อย-มาก)</SelectItem>
+                                <SelectItem value="qty-desc">จำนวน (มาก-น้อย)</SelectItem>
+                                <SelectItem value="qty-asc">จำนวน (น้อย-มาก)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             </div>
             <div className="flex-1">

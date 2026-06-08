@@ -28,6 +28,8 @@ const stockItemSchema = z.object({
     name: z.string().min(1, "กรุณาระบุชื่อวัตถุดิบ"),
     imageUrl: z.string().url("URL รูปภาพไม่ถูกต้อง").optional().or(z.literal("")),
     unit: z.string().min(1, "กรุณาระบุหน่วย"),
+    recipeQty: z.coerce.number().min(0).optional().default(0),
+    sortOrder: z.coerce.number().int().optional().default(0),
 });
 
 type StockItemFormValues = z.infer<typeof stockItemSchema>;
@@ -49,6 +51,8 @@ export function StockItemModal({ isOpen, onClose, onSuccess, stockItemToEdit }: 
             name: "",
             imageUrl: "",
             unit: "",
+            recipeQty: 0,
+            sortOrder: 0,
         } as StockItemFormValues,
     });
 
@@ -59,12 +63,16 @@ export function StockItemModal({ isOpen, onClose, onSuccess, stockItemToEdit }: 
                     name: stockItemToEdit.name || "",
                     imageUrl: stockItemToEdit.imageUrl || "",
                     unit: stockItemToEdit.unit || "",
+                    recipeQty: Number(stockItemToEdit.recipeQty) || 0,
+                    sortOrder: Number(stockItemToEdit.sortOrder) || 0,
                 });
             } else {
                 form.reset({
                     name: "",
                     imageUrl: "",
                     unit: "",
+                    recipeQty: 0,
+                    sortOrder: 0,
                 });
             }
         }
@@ -170,6 +178,51 @@ export function StockItemModal({ isOpen, onClose, onSuccess, stockItemToEdit }: 
                                     <FormControl>
                                         <Input
                                             placeholder="เช่น กก., ลิตร, ชิ้น"
+                                            {...field}
+                                            className="border-gray-300"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="recipeQty"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-gray-700 font-medium flex items-center gap-2">
+                                        <Ruler className="w-4 h-4" />
+                                        ปริมาณสูตรการผลิตต่อ 1 ห่อ (0 = ไม่ใช้ผลิต)
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            step="any"
+                                            placeholder="เช่น 0.2884"
+                                            {...field}
+                                            className="border-gray-300"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="sortOrder"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-gray-700 font-medium flex items-center gap-2">
+                                        <Ruler className="w-4 h-4" />
+                                        ลำดับการจัดเรียง (Sort Order)
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="0"
                                             {...field}
                                             className="border-gray-300"
                                         />

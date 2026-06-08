@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
-import { formatPoNumber } from '@/lib/utils';
+import { formatPoNumber, formatProdNumber } from '@/lib/utils';
 import { thaiBahtText } from '@/lib/thai-baht-text';
 
 // Register Thai font
@@ -161,6 +161,7 @@ interface ProductionData {
         address: string;
     };
     totalQuantity: number;
+    stockItems?: any[];
 }
 
 const ProductionPOTemplate = ({ data }: { data: ProductionData }) => {
@@ -169,16 +170,45 @@ const ProductionPOTemplate = ({ data }: { data: ProductionData }) => {
     const vatAmount = subtotal * 0.07;
     const grandTotal = subtotal + vatAmount;
 
-    // Calculation formulas for ingredients
-    const scalingFactor = totalQty / 50;
-    const requirements = [
-        { name: "แป้ง (Flour)", amount: 14.42 * scalingFactor, unit: "กิโลกรัม" },
-        { name: "เกลือ (Salt)", amount: 320.51 * scalingFactor, unit: "กรัม" },
-        { name: "สารกันบูด (Preservative)", amount: 192.31 * scalingFactor, unit: "กรัม" },
-        { name: "โซเดียมใบคาร์บอเนต (Sodium Bicarbonate)", amount: 320.51 * scalingFactor, unit: "กรัม" },
-        { name: "ถุง (Bag)", amount: 50 * scalingFactor, unit: "ห่อ" },
-        { name: "น้ำมัน (Oil)", amount: 0.96 * scalingFactor, unit: "ลิตร" },
-    ];
+    // Dynamic Recipe Calculation based on stockItems and order contents
+    const orderItemNames = data.items.map(item => item.productName.toLowerCase());
+    const hasYellow = orderItemNames.some(name => name.includes("บะหมี่ลวกเส้น") || name.includes("ข้าวซอยลวกเส้นสด"));
+    const hasGreen = orderItemNames.some(name => name.includes("หยกเส้นลวก"));
+
+    const requirements = (data.stockItems || [])
+        .filter((item: any) => Number(item.recipeQty) > 0)
+        .filter((item: any) => {
+            const name = item.name.toLowerCase();
+            if (name.includes("สีเหลือง")) return hasYellow;
+            if (name.includes("สีเขียว")) return hasGreen;
+            return true;
+        })
+        .map((item: any) => {
+            const qtyVal = Number(item.recipeQty) * totalQty;
+            let displayQty = qtyVal;
+            let displayUnit = item.unit;
+            let displayName = item.name;
+
+            // Friendly display formatting
+            if (item.name.includes("แป้ง") && item.unit === "ถุง") {
+                displayQty = qtyVal * 25; // Convert bags to kg
+                displayUnit = "กิโลกรัม";
+            } else if (item.unit === "กิโลกรัม" && qtyVal < 1) {
+                displayQty = qtyVal * 1000; // Convert to grams
+                displayUnit = "กรัม";
+            } else if (item.unit === "กิโลกรัม") {
+                displayUnit = "กิโลกรัม";
+            } else if (item.unit === "ลิตร") {
+                displayUnit = "ลิตร";
+            }
+
+            // Names mapping for PDF
+            if (displayName.includes("โซเดียมไบคาร์บอเนต")) displayName = "โซเดียมใบคาร์บอเนต (Sodium Bicarbonate)";
+            else if (displayName.includes("สีผสมอาหาร สีเหลือง")) displayName = "สีผสมอาหาร สีเหลือง (Yellow Food Coloring)";
+            else if (displayName.includes("สีผสมอาหาร สีเขียว")) displayName = "สีผสมอาหาร สีเขียว (Green Food Coloring)";
+
+            return { name: displayName, amount: displayQty, unit: displayUnit };
+        });
 
     const formatThaiDate = (value?: string | null) => {
         if (!value) return '';
@@ -207,7 +237,7 @@ const ProductionPOTemplate = ({ data }: { data: ProductionData }) => {
                     <View style={styles.infoBox}>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>เลข PO:  </Text>
-                            <Text style={[styles.infoValue, styles.infoValueBlue]}>{data.poNumber ? formatPoNumber(data.poNumber) : "AUTO-GEN"}    </Text>
+                            <Text style={[styles.infoValue, styles.infoValueBlue]}>{formatProdNumber(data.id, data.createdAt)}    </Text>
                         </View>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>ลูกค้า:</Text>

@@ -39,6 +39,7 @@ const restockSchema = z.object({
     stockItemId: z.string().min(1, "กรุณาเลือกวัตถุดิบ"),
     receiptNumber: z.string().optional(),
     quantity: z.coerce.number().min(0).optional(),
+    price: z.coerce.number().min(0).optional(),
     date: z.date(),
 });
 
@@ -66,6 +67,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
             stockItemId: "",
             receiptNumber: "",
             quantity: "" as any,
+            price: "" as any,
             date: new Date(),
         },
     });
@@ -82,6 +84,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
             stockItemId: "",
             receiptNumber: "",
             quantity: "" as any,
+            price: "" as any,
             date: new Date(),
         });
     }, [isOpen, form]);
@@ -94,6 +97,7 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
                 body: JSON.stringify({
                     receiptNumber: data.receiptNumber || "-",
                     quantity: data.quantity || 0,
+                    price: data.price || 0,
                     date: data.date.toISOString(),
                 }),
             });
@@ -196,6 +200,22 @@ export function GlobalRestockModal({ isOpen, onClose, onSuccess, stockItems }: G
                                 )}
                             />
 
+                            <FormField
+                                control={form.control}
+                                name="price"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">ราคาที่ซื้อ (บาท)</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" placeholder="0" {...field} value={field.value ?? ""} className="border-gray-300" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="date"

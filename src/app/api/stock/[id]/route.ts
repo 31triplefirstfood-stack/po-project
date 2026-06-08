@@ -6,6 +6,8 @@ const stockItemSchema = z.object({
     name: z.string().min(1, "ชื่อวัตถุดิบจำเป็นต้องระบุ"),
     imageUrl: z.string().url("URL รูปภาพไม่ถูกต้อง").optional().or(z.literal("")),
     unit: z.string().min(1, "หน่วยจำเป็นต้องระบุ"),
+    recipeQty: z.number().min(0).optional().default(0),
+    sortOrder: z.number().int().optional().default(0),
 });
 
 export async function GET(
@@ -59,6 +61,8 @@ export async function PUT(
                 name: validated.data.name,
                 imageUrl: validated.data.imageUrl || null,
                 unit: validated.data.unit,
+                recipeQty: validated.data.recipeQty,
+                sortOrder: validated.data.sortOrder,
             },
         });
 

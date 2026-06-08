@@ -40,6 +40,7 @@ export default function ProductionPdfPage() {
     const { id } = useParams();
     const router = useRouter();
     const [production, setProduction] = useState<ProductionOrder | null>(null);
+    const [stockItems, setStockItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
 
@@ -58,10 +59,15 @@ export default function ProductionPdfPage() {
     useEffect(() => {
         const fetchProduction = async () => {
             try {
-                const res = await fetch(`/api/production-orders/${id}`);
-                if (!res.ok) throw new Error("Failed to load Production Order");
-                const data = await res.json();
+                const [prodRes, stockRes] = await Promise.all([
+                    fetch(`/api/production-orders/${id}`),
+                    fetch("/api/stock")
+                ]);
+                if (!prodRes.ok || !stockRes.ok) throw new Error("Failed to load Production Order or Stocks");
+                const data = await prodRes.json();
+                const stocks = await stockRes.json();
                 setProduction(data);
+                setStockItems(stocks);
             } catch (error) {
                 toast({
                     variant: "destructive",
@@ -115,7 +121,8 @@ export default function ProductionPdfPage() {
                     phone: po.supplier.phone || '',
                     address: po.supplier.address || '',
                 },
-                totalQuantity
+                totalQuantity,
+                stockItems
             };
         } else {
             const totalQuantity = Number(production.quantity) || 1;
@@ -138,7 +145,8 @@ export default function ProductionPdfPage() {
                     phone: '',
                     address: '',
                 },
-                totalQuantity
+                totalQuantity,
+                stockItems
             };
         }
     };

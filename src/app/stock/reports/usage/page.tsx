@@ -16,6 +16,7 @@ interface UsageReportItem {
     checkerName: string | null;
     checkedAt: string | null;
     displayDate?: string;
+    note: string | null;
     stockItem: {
         name: string;
         imageUrl: string | null;
@@ -72,33 +73,18 @@ export default function StockUsageReportPage() {
         fetchData();
     }, []);
 
-    const aggregatedItems = useMemo(() => {
-        const groups: Record<string, Record<string, UsageReportItem>> = {};
-        
-        // Define the period we're looking at
-        const activePeriod = viewMode === "day" ? todayStr : selectedMonth;
-        
-        // Initialize groups with all stock items for the active period
-        // This ensures every material shows up even with 0 usage
-        groups[activePeriod] = {};
-        stockItems.forEach(si => {
-            groups[activePeriod][si.name] = {
-                id: `placeholder-${activePeriod}-${si.id}`,
-                date: viewMode === "day" ? todayStr : `${selectedMonth}-01`,
-                quantity: 0,
-                checkerName: "-",
-                checkedAt: null,
-                stockItem: {
-                    name: si.name,
-                    imageUrl: null,
-                    currentQty: si.currentQty,
-                    unit: si.unit
-                }
-            };
-        });
+    const displayDate = useMemo(() => {
+        try {
+            return viewMode === "day"
+                ? format(new Date(todayStr), "dd MMMM yyyy", { locale: th })
+                : format(new Date(selectedMonth + "-01"), "MMMM yyyy", { locale: th });
+        } catch (e) {
+            return "";
+        }
+    }, [viewMode, selectedMonth, todayStr]);
 
-        // Filter and add actual usage data
-        const filteredItems = items.filter(item => {
+    const filteredItems = useMemo(() => {
+        const filtered = items.filter(item => {
             const date = parseISO(item.date);
             if (viewMode === "day") {
                 return format(date, "yyyy-MM-dd") === todayStr;
@@ -107,33 +93,12 @@ export default function StockUsageReportPage() {
             }
         });
 
-        filteredItems.forEach(item => {
-            const matName = item.stockItem.name;
-            if (groups[activePeriod][matName]) {
-                groups[activePeriod][matName].quantity += Number(item.quantity);
-                // In day view, we might want to keep the last checker name
-                if (item.checkerName) {
-                    groups[activePeriod][matName].checkerName = item.checkerName;
-                }
-            }
-        });
-        
-        const result: UsageReportItem[] = [];
-        const displayDate = viewMode === "day" 
-            ? format(new Date(todayStr), "dd MMMM yyyy", { locale: th })
-            : format(new Date(selectedMonth + "-01"), "MMMM yyyy", { locale: th });
-            
-        Object.values(groups[activePeriod])
-            .sort((a, b) => a.stockItem.name.localeCompare(b.stockItem.name))
-            .forEach(record => {
-                result.push({
-                    ...record,
-                    displayDate
-                });
-            });
-        
-        return result;
-    }, [items, stockItems, viewMode, selectedMonth, todayStr]);
+        // Only keep items that have actual usage (quantity > 0)
+        const nonZeroItems = filtered.filter(item => Number(item.quantity) > 0);
+
+        // Sort by date descending
+        return [...nonZeroItems].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [items, viewMode, selectedMonth, todayStr]);
 
     if (isLoading) {
         return (
@@ -182,7 +147,7 @@ export default function StockUsageReportPage() {
             </div>
             <div className="flex-1">
                 <PDFViewer width="100%" height="100%" className="border-none">
-                    <StockUsageReportTemplate items={aggregatedItems} viewMode={viewMode} />
+                    <StockUsageReportTemplate items={filteredItems} viewMode={viewMode} displayDate={displayDate} />
                 </PDFViewer>
             </div>
         </div>

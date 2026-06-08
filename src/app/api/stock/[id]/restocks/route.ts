@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 const restockSchema = z.object({
     receiptNumber: z.string().min(1, "เลขใบเสร็จจำเป็นต้องระบุ"),
     quantity: z.number().positive("จำนวนต้องมากกว่า 0"),
+    price: z.number().min(0).optional().default(0),
     date: z.string().datetime(),
 });
 
@@ -66,6 +67,7 @@ export async function POST(
                     stockItemId: id,
                     receiptNumber: validated.data.receiptNumber,
                     quantity: new Prisma.Decimal(validated.data.quantity),
+                    price: new Prisma.Decimal(validated.data.price),
                     date: new Date(validated.data.date),
                 },
             });
