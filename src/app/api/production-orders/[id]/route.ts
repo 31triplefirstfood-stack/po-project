@@ -126,7 +126,7 @@ export async function PUT(
                                 quantity: new Prisma.Decimal(usageAmount),
                                 date: new Date(),
                                 checkerName: "ระบบ (อัตโนมัติ)",
-                                note: `ตัดสต็อกอัตโนมัติสำหรับการผลิต ${currentOrder.id}`
+                                note: "ตัดสต็อกอัตโนมัติสำหรับการผลิต"
                             }
                         })
                     );

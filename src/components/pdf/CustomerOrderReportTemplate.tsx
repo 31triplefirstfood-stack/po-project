@@ -85,6 +85,9 @@ const styles = StyleSheet.create({
     textRight: {
         textAlign: "right",
     },
+    textCenter: {
+        textAlign: "center",
+    },
     grandTotalContainer: {
         marginTop: 20,
         padding: 12,
@@ -150,7 +153,7 @@ export default function CustomerOrderReportTemplate({
     displayPeriod,
     items,
 }: CustomerOrderReportTemplateProps) {
-    
+
     // Helper to group items by localized issue date
     const groupedByDate = React.useMemo(() => {
         const groups: Record<string, CustomerOrderSummaryItem[]> = {};
@@ -193,11 +196,11 @@ export default function CustomerOrderReportTemplate({
                     <View>
                         <View style={styles.table}>
                             <View style={[styles.row, styles.headerRow]}>
-                                <View style={[styles.cell, { width: "25%" }]}><Text style={styles.bold}>ลูกค้า</Text></View>
-                                <View style={[styles.cell, { width: "15%" }]}><Text style={styles.bold}>เลข PO</Text></View>
-                                <View style={[styles.cell, { width: "35%" }]}><Text style={styles.bold}>รายการสินค้า</Text></View>
-                                <View style={[styles.cell, { width: "10%" }]}><Text style={[styles.bold, styles.textRight]}>จำนวน</Text></View>
-                                <View style={[styles.cell, styles.lastCell, { width: "15%" }]}><Text style={[styles.bold, styles.textRight]}>ยอดเงิน (บาท)</Text></View>
+                                <View style={[styles.cell, { width: "25%" }]}><Text style={[styles.bold, styles.textCenter]}>ลูกค้า</Text></View>
+                                <View style={[styles.cell, { width: "15%" }]}><Text style={[styles.bold, styles.textCenter]}>เลข PO</Text></View>
+                                <View style={[styles.cell, { width: "33%" }]}><Text style={[styles.bold, styles.textCenter]}>รายการสินค้า</Text></View>
+                                <View style={[styles.cell, { width: "12%" }]}><Text style={[styles.bold, styles.textCenter]}>จำนวน  </Text></View>
+                                <View style={[styles.cell, styles.lastCell, { width: "15%" }]}><Text style={[styles.bold, styles.textCenter]}>ยอดเงิน (บาท)</Text></View>
                             </View>
 
                             {items.length === 0 ? (
@@ -209,13 +212,13 @@ export default function CustomerOrderReportTemplate({
                             ) : (
                                 items.map((item) => (
                                     <View key={item.id} style={styles.row}>
-                                        <View style={[styles.cell, { width: "25%" }]}><Text>{item.customerName}</Text></View>
-                                        <View style={[styles.cell, { width: "15%" }]}><Text>{item.poNumber}</Text></View>
-                                        <View style={[styles.cell, { width: "35%" }]}><Text>{item.itemsSummary}</Text></View>
-                                        <View style={[styles.cell, { width: "10%" }]}><Text style={styles.textRight}>{Number(item.totalQty).toLocaleString()}</Text></View>
+                                        <View style={[styles.cell, { width: "25%" }]}><Text style={styles.textCenter}>{item.customerName}</Text></View>
+                                        <View style={[styles.cell, { width: "15%" }]}><Text style={styles.textCenter}>{item.poNumber}</Text></View>
+                                        <View style={[styles.cell, { width: "33%" }]}><Text style={styles.textCenter}>{item.itemsSummary}</Text></View>
+                                        <View style={[styles.cell, { width: "12%" }]}><Text style={styles.textCenter}>{Number(item.totalQty).toLocaleString()}</Text></View>
                                         <View style={[styles.cell, styles.lastCell, { width: "15%" }]}>
-                                            <Text style={styles.textRight}>
-                                                {Number(item.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            <Text style={styles.textCenter}>
+                                                ฿{Number(item.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </Text>
                                         </View>
                                     </View>
@@ -224,10 +227,10 @@ export default function CustomerOrderReportTemplate({
 
                             {items.length > 0 && (
                                 <View style={[styles.row, styles.subtotalRow]}>
-                                    <View style={[styles.cell, { width: "75%", justifyContent: "center" }]}>
-                                        <Text style={styles.bold}>รวมทั้งหมดประจำวัน</Text>
+                                    <View style={[styles.cell, { width: "73%", justifyContent: "center", alignItems: "flex-end" }]}>
+                                        <Text style={styles.bold}>รวมยอดสุทธิ</Text>
                                     </View>
-                                    <View style={[styles.cell, { width: "10%" }]}>
+                                    <View style={[styles.cell, { width: "12%" }]}>
                                         <Text style={[styles.bold, styles.textRight]}>{Number(grandTotalQty).toLocaleString()}</Text>
                                     </View>
                                     <View style={[styles.cell, styles.lastCell, { width: "15%" }]}>
@@ -260,32 +263,32 @@ export default function CustomerOrderReportTemplate({
                                         <Text style={styles.dateHeader}>{dateLabel}</Text>
                                         <View style={styles.table}>
                                             <View style={[styles.row, styles.headerRow]}>
-                                                <View style={[styles.cell, { width: "25%" }]}><Text style={styles.bold}>ลูกค้า</Text></View>
-                                                <View style={[styles.cell, { width: "15%" }]}><Text style={styles.bold}>เลข PO</Text></View>
-                                                <View style={[styles.cell, { width: "35%" }]}><Text style={styles.bold}>รายการสินค้า</Text></View>
-                                                <View style={[styles.cell, { width: "10%" }]}><Text style={[styles.bold, styles.textRight]}>จำนวน</Text></View>
-                                                <View style={[styles.cell, styles.lastCell, { width: "15%" }]}><Text style={[styles.bold, styles.textRight]}>ยอดเงิน (บาท)</Text></View>
+                                                <View style={[styles.cell, { width: "25%" }]}><Text style={[styles.bold, styles.textCenter]}>ลูกค้า</Text></View>
+                                                <View style={[styles.cell, { width: "15%" }]}><Text style={[styles.bold, styles.textCenter]}>เลข PO</Text></View>
+                                                <View style={[styles.cell, { width: "33%" }]}><Text style={[styles.bold, styles.textCenter]}>รายการสินค้า</Text></View>
+                                                <View style={[styles.cell, { width: "12%" }]}><Text style={[styles.bold, styles.textCenter]}>จำนวน </Text></View>
+                                                <View style={[styles.cell, styles.lastCell, { width: "15%" }]}><Text style={[styles.bold, styles.textCenter]}>ยอดเงิน (บาท)</Text></View>
                                             </View>
 
                                             {dateItems.map((item) => (
                                                 <View key={item.id} style={styles.row}>
-                                                    <View style={[styles.cell, { width: "25%" }]}><Text>{item.customerName}</Text></View>
-                                                    <View style={[styles.cell, { width: "15%" }]}><Text>{item.poNumber}</Text></View>
-                                                    <View style={[styles.cell, { width: "35%" }]}><Text>{item.itemsSummary}</Text></View>
-                                                    <View style={[styles.cell, { width: "10%" }]}><Text style={styles.textRight}>{Number(item.totalQty).toLocaleString()}</Text></View>
+                                                    <View style={[styles.cell, { width: "25%" }]}><Text style={styles.textCenter}>{item.customerName}</Text></View>
+                                                    <View style={[styles.cell, { width: "15%" }]}><Text style={styles.textCenter}>{item.poNumber}</Text></View>
+                                                    <View style={[styles.cell, { width: "33%" }]}><Text style={styles.textCenter}>{item.itemsSummary}</Text></View>
+                                                    <View style={[styles.cell, { width: "12%" }]}><Text style={styles.textCenter}>{Number(item.totalQty).toLocaleString()}</Text></View>
                                                     <View style={[styles.cell, styles.lastCell, { width: "15%" }]}>
-                                                        <Text style={styles.textRight}>
-                                                            {Number(item.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        <Text style={styles.textCenter}>
+                                                            ฿{Number(item.grandTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                                         </Text>
                                                     </View>
                                                 </View>
                                             ))}
 
                                             <View style={[styles.row, styles.subtotalRow]}>
-                                                <View style={[styles.cell, { width: "75%", justifyContent: "center" }]}>
-                                                    <Text style={styles.bold}>รวมประจำวัน</Text>
+                                                <View style={[styles.cell, { width: "73%", justifyContent: "center", alignItems: "flex-end" }]}>
+                                                    <Text style={styles.bold}>รวมยอดสุทธิ</Text>
                                                 </View>
-                                                <View style={[styles.cell, { width: "10%" }]}>
+                                                <View style={[styles.cell, { width: "12%" }]}>
                                                     <Text style={[styles.bold, styles.textRight]}>{Number(dateQty).toLocaleString()}</Text>
                                                 </View>
                                                 <View style={[styles.cell, styles.lastCell, { width: "15%" }]}>

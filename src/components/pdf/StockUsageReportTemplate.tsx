@@ -104,6 +104,14 @@ interface StockUsageReportTemplateProps {
 }
 
 export default function StockUsageReportTemplate({ items, viewMode, displayDate }: StockUsageReportTemplateProps) {
+    const renderNote = (note: string | null) => {
+        if (!note) return "-";
+        if (note.startsWith("ตัดสต็อกอัตโนมัติสำหรับการผลิต")) {
+            return "ตัดสต็อกอัตโนมัติสำหรับการผลิต";
+        }
+        return note;
+    };
+
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -111,7 +119,7 @@ export default function StockUsageReportTemplate({ items, viewMode, displayDate 
                     <Text style={styles.title}>รายงานประวัติการใช้วัตถุดิบ ({viewMode === "day" ? "รายวัน" : "รายเดือน"})</Text>
                     <Text style={styles.subtitle}>ประจำวันที่ {displayDate}</Text>
                 </View>
-
+ 
                 <View style={styles.table}>
                     <View style={[styles.row, styles.headerRow]}>
                         <View style={[styles.cell, { width: "20%" }]}><Text style={styles.bold}>วันที่</Text></View>
@@ -120,7 +128,7 @@ export default function StockUsageReportTemplate({ items, viewMode, displayDate 
                         <View style={[styles.cell, { width: "17%" }]}><Text style={styles.bold}>ผู้เบิก</Text></View>
                         <View style={[styles.cell, styles.lastCell, { width: "20%" }]}><Text style={styles.bold}>หมายเหตุ</Text></View>
                     </View>
-
+ 
                     {items.length === 0 ? (
                         <View style={styles.row}>
                             <View style={[styles.cell, styles.lastCell, { width: "100%", alignItems: "center" }]}>
@@ -143,7 +151,7 @@ export default function StockUsageReportTemplate({ items, viewMode, displayDate 
                                     <Text>{item.checkerName || "-"}</Text>
                                 </View>
                                 <View style={[styles.cell, styles.lastCell, { width: "20%" }]}>
-                                    <Text>{item.note || "-"}</Text>
+                                    <Text>{renderNote(item.note)}</Text>
                                 </View>
                             </View>
                         ))

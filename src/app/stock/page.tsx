@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardMinus, FileText, Package, Plus, Receipt, Trash2, Warehouse, ArrowUp, ArrowDown, Edit } from "lucide-react";
+import { ClipboardMinus, FileText, Package, Plus, Receipt, Trash2, Warehouse, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -38,29 +38,6 @@ export default function StockPage() {
     const [editingItem, setEditingItem] = useState<StockItem | undefined>(undefined);
     const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
     const [isUsageModalOpen, setIsUsageModalOpen] = useState(false);
-
-    const handleReorder = async (id: string, direction: "up" | "down") => {
-        try {
-            const res = await fetch("/api/stock/reorder", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id, direction })
-            });
-
-            if (!res.ok) {
-                const json = await res.json();
-                throw new Error(json.error || "Failed to reorder");
-            }
-
-            fetchStockItems();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "เกิดข้อผิดพลาด",
-                description: error.message,
-            });
-        }
-    };
 
     const fetchStockItems = async () => {
         try {
@@ -249,26 +226,6 @@ export default function StockPage() {
                                        title="แก้ไขวัตถุดิบ"
                                    >
                                        <Edit className="h-5 w-5" />
-                                   </button>
-
-                                   {/* Reorder Up Button */}
-                                   <button
-                                       type="button"
-                                       className="flex-1 flex items-center justify-center bg-white hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
-                                       onClick={() => handleReorder(item.id, "up")}
-                                       title="เลื่อนขึ้น"
-                                   >
-                                       <ArrowUp className="h-5 w-5" />
-                                   </button>
-
-                                   {/* Reorder Down Button */}
-                                   <button
-                                       type="button"
-                                       className="flex-1 flex items-center justify-center bg-white hover:bg-blue-50 text-blue-500 hover:text-blue-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
-                                       onClick={() => handleReorder(item.id, "down")}
-                                       title="เลื่อนลง"
-                                   >
-                                       <ArrowDown className="h-5 w-5" />
                                    </button>
 
                                    {/* Delete Button */}

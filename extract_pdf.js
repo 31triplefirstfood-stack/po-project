@@ -1,15 +1,19 @@
 const fs = require('fs');
-const pdf = require('pdf-parse');
+const content = fs.readFileSync('d:/Workshop/po/src/components/pdf/CustomerOrderReportTemplate.tsx', 'utf8');
+const lines = content.split('\n');
+const line = lines[220]; // line 221
+console.log('Line 221:', line);
+for (let i = 0; i < line.length; i++) {
+    console.log(line[i], line.charCodeAt(i));
+}
 
-console.log('Starting PDF extraction...');
-let dataBuffer = fs.readFileSync('d:\\Workshop\\po\\exaple_po.pdf');
 
-pdf(dataBuffer).then(function (data) {
-    console.log('PDF loaded, extraction complete.');
-    console.log('Text content length:', data.text.length);
-    fs.writeFileSync('d:\\Workshop\\po\\pdf_content.txt', data.text);
-    console.log('Content written to pdf_content.txt');
-}).catch(function (error) {
-    console.error('Error extracting PDF:', error);
-    fs.writeFileSync('d:\\Workshop\\po\\pdf_error.txt', error.toString());
-});
+
+
+
+
+
+
+
+
+
