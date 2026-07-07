@@ -218,7 +218,7 @@ export default function StockPage() {
                                    {/* Edit Button */}
                                    <button
                                        type="button"
-                                       className="flex-1 flex items-center justify-center bg-white hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
+                                       className="flex-1 sm:flex-none sm:h-1/2 sm:w-full flex items-center justify-center bg-white hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors p-4 border-r sm:border-r-0 sm:border-b border-gray-100"
                                        onClick={() => {
                                            setEditingItem(item);
                                            setIsModalOpen(true);
@@ -231,7 +231,7 @@ export default function StockPage() {
                                    {/* Delete Button */}
                                    <button
                                        type="button"
-                                       className="flex-1 flex items-center justify-center bg-white hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors p-4"
+                                       className="flex-1 sm:flex-none sm:h-1/2 sm:w-full flex items-center justify-center bg-white hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors p-4"
                                        onClick={() => handleDeleteItem(item)}
                                        title="ลบวัตถุดิบ"
                                    >
