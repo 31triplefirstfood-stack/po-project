@@ -10,17 +10,13 @@ export function formatPoNumber(poNumber: string) {
 
   if (legacyMatch) {
     const [, thaiYear, month, day, sequence] = legacyMatch
-    return `PROD-${thaiYear}${month}${day}-B${sequence}`
+    return `TAX${thaiYear}-${month}-B${sequence}`
   }
 
   const taxMatch = poNumber.match(/^TAX(\d{4})-(\d{2})-B(\d{3})$/)
   if (taxMatch) {
     const [, thaiYear, month, sequence] = taxMatch
-    return `PROD-${thaiYear}${month}-B${sequence}`
-  }
-
-  if (poNumber.startsWith("TAX")) {
-    return poNumber.replace(/^TAX/, "PROD")
+    return `TAX${thaiYear}-${month}-B${sequence}`
   }
 
   return poNumber
