@@ -162,6 +162,7 @@ export default function CustomerOrderReportTemplate({
             if (item.issueDate) {
                 try {
                     dateKey = new Date(item.issueDate).toLocaleDateString("th-TH", {
+                        timeZone: "Asia/Bangkok",
                         year: "numeric",
                         month: "long",
                         day: "numeric",

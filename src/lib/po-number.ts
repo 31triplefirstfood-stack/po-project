@@ -1,20 +1,26 @@
 import { db } from "@/lib/db";
-import { format } from "date-fns";
+import { parseBangkokDate } from "@/lib/utils";
 
 /**
  * Generates the next PO number in the format TAX{Year}-{Month}-B{Sequence}.
- * Computes the max sequence number for the entire year so that
- * the sequence number continues across months and resets yearly.
+ * Computes the max sequence number for the month in Asia/Bangkok timezone.
  *
  * Must be called inside a Prisma transaction.
  */
 export async function generatePoNumber(
     tx: Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">,
-    customDate?: Date
+    customDate?: Date | string
 ): Promise<string> {
-    const referenceDate = customDate || new Date();
-    const thaiYear = referenceDate.getFullYear() + 543;
-    const month = format(referenceDate, "MM");
+    const referenceDate = customDate ? parseBangkokDate(customDate) : new Date();
+
+    const [yearStr, monthStr] = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "2-digit",
+    }).format(referenceDate).split("-");
+
+    const thaiYear = parseInt(yearStr, 10) + 543;
+    const month = monthStr;
     
     // Prefix for searching all POs within the same month of the same year
     const monthPrefix = `TAX${thaiYear}-${month}-`;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { parseBangkokDate } from "@/lib/utils";
 import { z } from "zod";
 import { PoStatus } from "@prisma/client";
 
@@ -85,8 +86,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
             where: { id },
             data: {
                 ...(validated.data.status && { status: validated.data.status }),
-                ...(validated.data.paymentDate !== undefined && { paymentDate: validated.data.paymentDate ? new Date(validated.data.paymentDate) : null }),
-                ...(validated.data.deliveryDate && { deliveryDate: new Date(validated.data.deliveryDate) }),
+                ...(validated.data.paymentDate !== undefined && { paymentDate: validated.data.paymentDate ? parseBangkokDate(validated.data.paymentDate) : null }),
+                ...(validated.data.deliveryDate && { deliveryDate: parseBangkokDate(validated.data.deliveryDate) }),
                 ...(validated.data.notes !== undefined && { notes: validated.data.notes }),
             },
             include: {
@@ -201,15 +202,19 @@ export async function PUT(request: NextRequest, { params }: Params) {
         const vatAmount = Number(((subtotal - discountAmount) * VAT_RATE).toFixed(8));
         const grandTotal = Number((subtotal - discountAmount + vatAmount).toFixed(8));
 
+        const parsedIssueDate = parseBangkokDate(issueDate);
+        const parsedPaymentDate = paymentDate ? parseBangkokDate(paymentDate) : null;
+        const parsedDeliveryDate = parseBangkokDate(deliveryDate);
+
         const updatedPo = await db.$transaction(async (tx) => {
             // 1. Update PO details
             const po = await tx.purchaseOrder.update({
                 where: { id },
                 data: {
                     supplierId,
-                    issueDate: new Date(issueDate),
-                    paymentDate: paymentDate ? new Date(paymentDate) : null,
-                    deliveryDate: new Date(deliveryDate),
+                    issueDate: parsedIssueDate,
+                    paymentDate: parsedPaymentDate,
+                    deliveryDate: parsedDeliveryDate,
 
                     subtotal,
                     vatAmount,

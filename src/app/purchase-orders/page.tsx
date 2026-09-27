@@ -161,13 +161,33 @@ export default function PurchaseOrdersPage() {
         }
         if (filterDate) {
             const dateStr = format(filterDate, "yyyy-MM-dd");
-            result = result.filter(po => po.issueDate.startsWith(dateStr));
+            result = result.filter(po => {
+                const poBangkokDate = new Intl.DateTimeFormat("en-CA", {
+                    timeZone: "Asia/Bangkok",
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                }).format(new Date(po.issueDate));
+                return poBangkokDate === dateStr || po.issueDate.startsWith(dateStr);
+            });
         }
         if (filterYear !== "all") {
-            result = result.filter(po => new Date(po.issueDate).getFullYear() === Number(filterYear));
+            result = result.filter(po => {
+                const y = new Intl.DateTimeFormat("en-CA", {
+                    timeZone: "Asia/Bangkok",
+                    year: "numeric",
+                }).format(new Date(po.issueDate));
+                return Number(y) === Number(filterYear);
+            });
         }
         if (filterMonth !== "all") {
-            result = result.filter(po => (new Date(po.issueDate).getMonth() + 1) === Number(filterMonth));
+            result = result.filter(po => {
+                const m = new Intl.DateTimeFormat("en-CA", {
+                    timeZone: "Asia/Bangkok",
+                    month: "numeric",
+                }).format(new Date(po.issueDate));
+                return Number(m) === Number(filterMonth);
+            });
         }
         setFilteredPos(result);
     }, [pos, filterPo, filterCustomer, filterDate, filterMonth, filterYear]);

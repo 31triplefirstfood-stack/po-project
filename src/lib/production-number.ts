@@ -10,11 +10,15 @@ import { format } from "date-fns";
 export async function generateProductionNumber(
     tx: Omit<typeof db, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">
 ): Promise<string> {
-    const now = new Date();
-    const thaiYear = now.getFullYear() + 543;
-    const month = format(now, "MM");
-    const day = format(now, "dd");
-    const datePart = `${thaiYear}${month}${day}`;
+    const [yearStr, monthStr, dayStr] = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date()).split("-");
+
+    const thaiYear = parseInt(yearStr, 10) + 543;
+    const datePart = `${thaiYear}${monthStr}${dayStr}`;
 
     const prefix = `PROD-${datePart}-`;
 

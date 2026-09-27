@@ -70,7 +70,12 @@ export default function CustomerOrderReportsPage() {
     // Filter POs & format them for report consumption
     const reportItems = useMemo(() => {
         const filtered = pos.filter((po) => {
-            const dateStr = po.issueDate.substring(0, 10); // "YYYY-MM-DD"
+            const dateStr = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "Asia/Bangkok",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            }).format(new Date(po.issueDate));
             if (reportType === "daily") {
                 return dateStr === selectedDate;
             } else {

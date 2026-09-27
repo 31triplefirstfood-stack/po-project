@@ -377,6 +377,7 @@ const POTemplate = ({ data }: { data: POData }) => {
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return '';
         return date.toLocaleDateString('th-TH', {
+            timeZone: 'Asia/Bangkok',
             day: 'numeric',
             month: 'long',
             year: 'numeric',

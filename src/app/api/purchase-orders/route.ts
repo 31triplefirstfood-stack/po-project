@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { generatePoNumber } from "@/lib/po-number";
+import { parseBangkokDate } from "@/lib/utils";
 import { z } from "zod";
 import { PoStatus } from "@prisma/client";
 
@@ -128,10 +129,14 @@ export async function POST(request: NextRequest) {
         const vatAmount = Number(((subtotal - discountAmount) * VAT_RATE).toFixed(8));
         const grandTotal = Number((subtotal - discountAmount + vatAmount).toFixed(8));
 
+        const parsedIssueDate = parseBangkokDate(issueDate);
+        const parsedPaymentDate = paymentDate ? parseBangkokDate(paymentDate) : null;
+        const parsedDeliveryDate = parseBangkokDate(deliveryDate);
+
         // ── Create PO inside a transaction with PO number lock ──────────────────
         const purchaseOrder = await db.$transaction(async (tx) => {
             // Generate PO number safely inside the transaction using the issue date
-            const poNumber = await generatePoNumber(tx, new Date(issueDate));
+            const poNumber = await generatePoNumber(tx, parsedIssueDate);
 
             // Verify supplier and user exist
             const [supplier, user] = await Promise.all([
@@ -175,9 +180,9 @@ export async function POST(request: NextRequest) {
                     poNumber,
                     userId,
                     supplierId,
-                    issueDate: new Date(issueDate),
-                    paymentDate: paymentDate ? new Date(paymentDate) : null,
-                    deliveryDate: new Date(deliveryDate),
+                    issueDate: parsedIssueDate,
+                    paymentDate: parsedPaymentDate,
+                    deliveryDate: parsedDeliveryDate,
                     subtotal,
                     discountAmount,
                     vatAmount,

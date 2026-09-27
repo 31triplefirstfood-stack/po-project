@@ -24,10 +24,30 @@ export function formatPoNumber(poNumber: string) {
 
 export function formatProdNumber(id: string, date: Date | string) {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const beYear = d.getFullYear() + 543;
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
+  const [yearStr, monthStr, dayStr] = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d).split("-");
+  const beYear = parseInt(yearStr, 10) + 543;
   const suffix = id.slice(-3).toUpperCase();
-  return `PROD-${beYear}${mm}${dd}-${suffix}`;
+  return `PROD-${beYear}${monthStr}${dayStr}-${suffix}`;
+}
+
+export function parseBangkokDate(dateInput?: Date | string | null): Date {
+  if (!dateInput) return new Date();
+  if (typeof dateInput === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+    return new Date(`${dateInput}T00:00:00.000Z`);
+  }
+  const d = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+  if (isNaN(d.getTime())) return new Date();
+  const bangkokYMD = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+  return new Date(`${bangkokYMD}T00:00:00.000Z`);
 }
 

@@ -368,9 +368,9 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
 
             const payload = {
                 supplierId: data.supplierId,
-                issueDate: data.issueDate,
-                paymentDate: data.paymentDate,
-                deliveryDate: data.deliveryDate,
+                issueDate: format(data.issueDate, "yyyy-MM-dd"),
+                paymentDate: data.paymentDate ? format(data.paymentDate, "yyyy-MM-dd") : null,
+                deliveryDate: format(data.deliveryDate, "yyyy-MM-dd"),
                 items: payloadItems,
             };
 
@@ -447,7 +447,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                                                 onChange={(event) => {
                                                     const value = event.target.value;
                                                     if (value) {
-                                                        field.onChange(new Date(`${value}T00:00:00`));
+                                                        field.onChange(new Date(`${value}T12:00:00`));
                                                     }
                                                 }}
                                                 className="h-10 border-gray-200 bg-white"
@@ -471,7 +471,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                                                 value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                                                 onChange={(event) => {
                                                     const value = event.target.value;
-                                                    field.onChange(value ? new Date(`${value}T00:00:00`) : null);
+                                                    field.onChange(value ? new Date(`${value}T12:00:00`) : null);
                                                 }}
                                                 className="h-10 border-amber-200 text-amber-700 bg-white"
                                             />
@@ -495,7 +495,7 @@ export function PurchaseOrderForm({ initialData, onSuccess, onCancel }: Purchase
                                                 onChange={(event) => {
                                                     const value = event.target.value;
                                                     if (value) {
-                                                        field.onChange(new Date(`${value}T00:00:00`));
+                                                        field.onChange(new Date(`${value}T12:00:00`));
                                                     }
                                                 }}
                                                 className="h-10 border-red-200 text-red-600 bg-white"
