@@ -1,5 +1,3 @@
-"use client";
-
 import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
 import { thaiBahtText } from '@/lib/thai-baht-text';
@@ -7,10 +5,10 @@ import { formatPoNumber } from '@/lib/utils';
 
 // Register Thai font
 Font.register({
-    family: 'Sarabun',
+    family: 'PoSarabun',
     fonts: [
-        { src: '/fonts/Sarabun-Regular.ttf' },
-        { src: '/fonts/Sarabun-Bold.ttf', fontWeight: 'bold' }
+        { src: typeof window === 'undefined' ? `${process.cwd()}/public/fonts/Sarabun-Regular.ttf` : '/fonts/Sarabun-Regular.ttf' },
+        { src: typeof window === 'undefined' ? `${process.cwd()}/public/fonts/Sarabun-Bold.ttf` : '/fonts/Sarabun-Bold.ttf', fontWeight: 'bold' }
     ]
 });
 
@@ -18,7 +16,7 @@ const styles = StyleSheet.create({
     page: {
         padding: 30, // Approx 1cm margin
         fontSize: 10,
-        fontFamily: 'Sarabun',
+        fontFamily: 'PoSarabun',
         color: '#333',
     },
     // Header

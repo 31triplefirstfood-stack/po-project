@@ -39,13 +39,8 @@ test('monthly API queries the full month without status or production exclusions
 test('real PO template renders readable PDFs with Thai fonts and item quantities', async () => {
     const React = require('react');
     const { pdf, Font } = require('@react-pdf/renderer');
-    // Browser URLs resolve to public/ in Next; supply equivalent local files here.
-    const register = Font.register;
-    Font.register = data => register({ ...data, fonts: data.fonts.map(font => ({
-        ...font, src: path.resolve(__dirname, '../public', font.src.slice(1)),
-    })) });
     const Template = require('../src/components/pdf/POTemplate').default;
-    Font.register = register;
+    assert.ok(Font.getRegisteredFontFamilies().includes('PoSarabun'));
     const data = {
         poNumber: 'TAX2569-10-B045', issueDate: '2026-10-18T00:00:00Z',
         deliveryDate: '2026-10-20T00:00:00Z', paymentDate: null,
@@ -63,4 +58,22 @@ test('real PO template renders readable PDFs with Thai fonts and item quantities
         assert.ok(result.text.includes(data.poNumber));
         assert.ok(result.text.includes('214.00'));
     } finally { await parser.destroy(); }
+});
+
+test('individual PDF endpoint supplies the PO filename to the native viewer', async () => {
+    global.prisma.purchaseOrder.findUnique = async () => ({
+        poNumber: 'TAX2569-10-B045', issueDate: new Date('2026-10-18T00:00:00Z'),
+        deliveryDate: new Date('2026-10-20T00:00:00Z'), paymentDate: null,
+        supplier: { companyName: 'บริษัท ทดสอบ จำกัด', address: 'เชียงใหม่', taxId: '', phone: '', email: '', contactPerson: '' },
+        items: [{ itemName: 'ทดสอบ', quantity: '2', unitPrice: '100', product: null }],
+    });
+    const { GET } = require('../src/app/api/purchase-orders/[id]/pdf/route');
+    const response = await GET(new Request('http://localhost'), { params: Promise.resolve({ id: 'test-po' }) });
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-disposition'), /inline; filename="TAX2569-10-B045.pdf"/);
+    assert.equal(response.headers.get('content-type'), 'application/pdf');
+    assert.equal(new TextDecoder().decode((await response.arrayBuffer()).slice(0, 5)), '%PDF-');
+    global.prisma.purchaseOrder.findUnique = async () => null;
+    const missing = await GET(new Request('http://localhost'), { params: Promise.resolve({ id: 'missing' }) });
+    assert.equal(missing.status, 404);
 });

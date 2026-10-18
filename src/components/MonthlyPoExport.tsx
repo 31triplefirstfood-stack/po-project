@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from '@/hooks/use-toast';
 import { buildPoArchive, getMonthlyRange, selectArchiveNames } from '@/lib/monthly-po-export';
 import { formatPoNumber } from '@/lib/utils';
+import { prepareFileSave } from '@/lib/file-save';
 import type POTemplate from '@/components/pdf/POTemplate';
 
 type PdfData = ComponentProps<typeof POTemplate>['data'];
@@ -32,6 +33,8 @@ export default function MonthlyPoExport() {
         setProgress('กำลังโหลดรายการ PO…');
         try {
             getMonthlyRange(Number(year), Number(month));
+            const target = await prepareFileSave({ name: `PO-${Number(year) + 543}-${month.padStart(2, '0')}.zip`, mimeType: 'application/zip', extension: '.zip' });
+            if (!target) return;
             const response = await fetch(`/api/purchase-orders/monthly-export?year=${year}&month=${month}`, { cache: 'no-store' });
             if (!response.ok) throw new Error('ไม่สามารถโหลด PO ได้ กรุณาลองใหม่');
             const orders: ExportOrder[] = await response.json();
@@ -61,15 +64,8 @@ export default function MonthlyPoExport() {
             }
             setProgress('กำลังเตรียมไฟล์ ZIP…');
             const archive = buildPoArchive(files);
-            const url = URL.createObjectURL(new Blob([archive], { type: 'application/zip' }));
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `PO-${Number(year) + 543}-${month.padStart(2, '0')}.zip`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-            toast({ title: `สร้างไฟล์ครบ ${orders.length} ใบแล้ว`, description: 'ส่งไฟล์ ZIP ให้เบราว์เซอร์ดาวน์โหลดแล้ว' });
+            const result = await target.save(new Blob([archive], { type: 'application/zip' }));
+            toast({ title: `สร้างไฟล์ครบ ${orders.length} ใบแล้ว`, description: result === 'saved' ? 'บันทึก ZIP ในตำแหน่งที่เลือกแล้ว' : 'ส่งไฟล์ ZIP ให้เบราว์เซอร์ดาวน์โหลดแล้ว' });
             setOpen(false);
         } catch (error) {
             toast({ variant: 'destructive', title: 'ดาวน์โหลดไม่สำเร็จ',
@@ -85,25 +81,26 @@ export default function MonthlyPoExport() {
             <Download className="w-4 h-4" /> ดาวน์โหลด PO รายเดือน
         </Button>
         <Dialog open={open} onOpenChange={value => { if (!busy.current) setOpen(value); }}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md bg-white text-slate-900 border-violet-200 shadow-2xl" style={{ backgroundColor: '#ffffff', color: '#0f172a' }}>
                 <DialogHeader>
                     <DialogTitle>ดาวน์โหลด PO รายเดือน</DialogTitle>
-                    <DialogDescription>เลือกตามวันที่สั่งซื้อ รวมทุกสถานะและทุกขั้นตอนการผลิต ดาวน์โหลดเป็น ZIP ภายในมี PDF แยกตามเลข PO</DialogDescription>
+                    <DialogDescription className="text-slate-600">เลือกตามวันที่สั่งซื้อ รวมทุกสถานะและทุกขั้นตอนการผลิต ดาวน์โหลดเป็น ZIP ภายในมี PDF แยกตามเลข PO</DialogDescription>
                 </DialogHeader>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 rounded-lg border border-violet-100 bg-violet-50 p-4">
                     <label className="text-sm space-y-2">เดือน
-                        <select aria-label="เดือน" value={month} onChange={e => setMonth(e.target.value)} disabled={!!progress} className="border rounded-md w-full h-10 px-2 bg-white">
+                        <select aria-label="เดือน" value={month} onChange={e => setMonth(e.target.value)} disabled={!!progress} className="border border-slate-300 text-slate-900 rounded-md w-full h-10 px-2 bg-white">
                             {Array.from({ length: 12 }, (_, i) => <option key={i} value={String(i + 1)}>{new Intl.DateTimeFormat('th-TH', { month: 'long', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, i, 1)))}</option>)}
                         </select>
                     </label>
                     <label className="text-sm space-y-2">ปี พ.ศ.
-                        <Input aria-label="ปี พ.ศ." type="number" min={2443} max={2743} value={year ? Number(year) + 543 : ''} disabled={!!progress} onChange={e => setYear(e.target.value ? String(Number(e.target.value) - 543) : '')} />
+                        <Input className="bg-white text-slate-900 border-slate-300" aria-label="ปี พ.ศ." type="number" min={2443} max={2743} value={year ? Number(year) + 543 : ''} disabled={!!progress} onChange={e => setYear(e.target.value ? String(Number(e.target.value) - 543) : '')} />
                     </label>
                 </div>
                 <p role="status" aria-live="polite" className="text-sm text-gray-600">{progress || 'PDF ใช้รูปแบบเดียวกับหน้าเปิดดู PO กรุณาเปิดหน้านี้ไว้จนสร้างไฟล์ครบ'}</p>
-                <Button disabled={!!progress || !year} onClick={download}>
+                <p className="text-xs text-slate-600">กดปุ่มด้านล่างเพื่อเลือกที่บันทึกไฟล์ หากเบราว์เซอร์ไม่รองรับ จะใช้ตำแหน่งดาวน์โหลดตามการตั้งค่าเบราว์เซอร์</p>
+                <Button className="bg-violet-700 hover:bg-violet-800 text-white" disabled={!!progress || !year} onClick={download}>
                     {progress ? <Loader2 className="mr-2 w-4 h-4 animate-spin" /> : <Download className="mr-2 w-4 h-4" />}
-                    {progress ? 'กำลังเตรียมไฟล์…' : 'ดาวน์โหลด ZIP'}
+                    {progress ? 'กำลังเตรียมไฟล์…' : 'เลือกที่บันทึกและดาวน์โหลด ZIP'}
                 </Button>
             </DialogContent>
         </Dialog>

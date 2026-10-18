@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import dynamic from "next/dynamic"; // Added for dynamic import
 import { Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import POTemplate from "@/components/pdf/POTemplate";
+import PoPdfDownload from "@/components/PoPdfDownload";
 import { formatPoNumber } from "@/lib/utils";
 
 interface POItem {
@@ -45,15 +44,6 @@ export default function PurchaseOrderDetailPage() {
     const [po, setPo] = useState<PurchaseOrder | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const { toast } = useToast();
-
-    // Dynamically import PDFViewer to avoid SSR issues
-    const PDFViewer = dynamic(
-        () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
-        {
-            ssr: false,
-            loading: () => <div className="flex h-[800px] items-center justify-center border rounded-md bg-muted/10"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>,
-        }
-    );
 
     const fetchPO = async () => {
         try {
@@ -126,7 +116,7 @@ export default function PurchaseOrderDetailPage() {
 
     return (
         <div className="space-y-4 w-full p-4 md:p-6 h-[100dvh] flex flex-col">
-            <div className="flex items-center justify-between shrink-0">
+            <div className="flex flex-wrap gap-3 items-center justify-between shrink-0">
                 <div className="flex items-center gap-4">
                     <Link href="/purchase-orders">
                         <Button variant="outline" size="icon">
@@ -141,6 +131,7 @@ export default function PurchaseOrderDetailPage() {
                 </div>
 
                 <div className="flex gap-2">
+                    <PoPdfDownload data={pdfData} />
                     {po.status === 'DRAFT' && (
                         <Button onClick={handleApprove} className="bg-green-600 hover:bg-green-700">
                             <CheckCircle className="mr-2 h-4 w-4" /> Approve PO
@@ -150,9 +141,7 @@ export default function PurchaseOrderDetailPage() {
             </div>
 
             <div className="flex-1 border rounded-lg overflow-hidden shadow-sm bg-white">
-                <PDFViewer width="100%" height="100%" className="w-full h-full border-none">
-                    <POTemplate data={pdfData} />
-                </PDFViewer>
+                <iframe title={`PO ${pdfData.poNumber}`} src={`/api/purchase-orders/${po.id}/pdf`} width="100%" height="100%" className="w-full h-full border-none" />
             </div>
         </div>
     );
