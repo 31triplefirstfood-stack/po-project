@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import NavTabs from "@/components/NavTabs";
+import MonthlyPoExport from "@/components/MonthlyPoExport";
 import { cn, formatPoNumber } from "@/lib/utils";
 
 // Mock DatePicker if not exists, or I will use standard input type date for speed
@@ -213,12 +214,15 @@ export default function PurchaseOrdersPage() {
                         <FileSpreadsheet className="w-5 h-5" />
                         <span className="font-bold text-center sm:text-left">รายการ PO ทั้งหมด (All PO List)</span>
                     </div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                    <MonthlyPoExport />
                     <Link href="/purchase-orders/reports">
                         <Button className="bg-white text-purple-700 hover:bg-purple-50 font-bold border border-transparent shadow-sm flex items-center gap-1.5 text-xs sm:text-sm">
                             <FileSpreadsheet className="w-4 h-4 text-purple-600" />
                             รายงานสรุปยอดสั่งซื้อ (PDF)
                         </Button>
                     </Link>
+                    </div>
                 </div>
 
                 {/* ── Filters ── */}
